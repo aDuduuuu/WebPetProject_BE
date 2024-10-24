@@ -1,6 +1,6 @@
-const { check } = require('express-validator');
+import { check } from 'express-validator';
 
-exports.registerValidation = [
+export const registerValidation = [
   check('email').isEmail().withMessage('Email không hợp lệ'),
   check('firstName').notEmpty().withMessage('Vui lòng nhập họ'),
   check('lastName').notEmpty().withMessage('Vui lòng nhập tên'),

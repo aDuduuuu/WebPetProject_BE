@@ -1,11 +1,12 @@
-const express = require('express');
+import { register, verifyEmail } from '../controllers/userController.js';
+import express from 'express';
+
 const router = express.Router();
-const userController = require('../controllers/userController');
 
 // Route cho chức năng đăng ký
-router.post('/', userController.register);
+router.post('/', register);
 
 // Route cho chức năng xác thực email
-router.get('/verify-email', userController.verifyEmail);
+router.get('/verify-email', verifyEmail);
 
-module.exports = router;
+export default router;

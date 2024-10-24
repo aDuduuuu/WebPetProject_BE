@@ -1,7 +1,6 @@
-// user.js
-const mongoose = require('mongoose');
-const userSchema = require('../schema/user');  // Import schema từ file user.js
+import mongoose from 'mongoose';
+import userSchema from '../schema/user.js';  // Import schema từ file user.js
 
 const User = mongoose.model('User', userSchema);  // Sử dụng schema để tạo model
 
-module.exports = User;
+export default User;

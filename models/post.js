@@ -1,7 +1,6 @@
-// post.js
-const mongoose = require('mongoose');
-const postSchema = require('../schema/post');  // Import schema từ file post.js
+import mongoose from 'mongoose';
+import postSchema from '../schema/post.js';  // Import schema từ file post.js
 
 const Post = mongoose.model('Post', postSchema);  // Sử dụng schema để tạo model
 
-module.exports = Post;
+export default Post;

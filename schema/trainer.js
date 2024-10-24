@@ -1,4 +1,4 @@
-const mongoose = require('../mongoose');
+import mongoose from 'mongoose';
 
 const trainerSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -16,4 +16,4 @@ const trainerSchema = new mongoose.Schema({
   }
 });
 
-module.exports = trainerSchema;
+export default trainerSchema;

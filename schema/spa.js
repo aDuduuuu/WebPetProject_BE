@@ -1,4 +1,4 @@
-const mongoose = require('../mongoose');
+import mongoose from 'mongoose';
 
 const spaSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -16,4 +16,4 @@ const spaSchema = new mongoose.Schema({
   }
 });
 
-module.exports = spaSchema;
+export default spaSchema;

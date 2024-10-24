@@ -1,7 +1,6 @@
-// order.js
-const mongoose = require('mongoose');
-const orderSchema = require('../schema/order');  // Import schema từ file order.js
+import mongoose from 'mongoose';
+import orderSchema from '../schema/order.js';  // Import schema từ file order.js
 
 const Order = mongoose.model('Order', orderSchema);  // Sử dụng schema để tạo model
 
-module.exports = Order;
+export default Order;

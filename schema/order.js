@@ -1,4 +1,4 @@
-const mongoose = require('../mongoose');
+import mongoose from 'mongoose';
 
 const orderSchema = new mongoose.Schema({
   orderID: { type: Number, required: true, unique: true },
@@ -12,4 +12,4 @@ const orderSchema = new mongoose.Schema({
   }]
 });
 
-module.exports = orderSchema;
+export default orderSchema;
