@@ -1,4 +1,4 @@
-import { register, verifyEmail } from '../controllers/userController.js';
+import { register, verifyEmail, login } from '../controllers/userController.js';
 import express from 'express';
 
 const router = express.Router();
@@ -8,5 +8,8 @@ router.post('/', register);
 
 // Route cho chức năng xác thực email
 router.get('/verify-email', verifyEmail);
+
+// Route cho chức năng đăng nhập
+router.post('/authentication', login);
 
 export default router;

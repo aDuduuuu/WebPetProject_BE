@@ -56,3 +56,30 @@ const sendVerificationEmail = async (userEmail, token) => {
 
   await transporter.sendMail(mailOptions);
 };
+
+export const loginUser = async (email, password) => {
+  // Tìm người dùng theo email
+  const user = await User.findOne({ email });
+  if (!user) {
+    console.error('Email không tồn tại:', email);
+    throw new Error('Sai email hoặc mật khẩu');
+  }
+
+  // Kiểm tra mật khẩu
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!isMatch) {
+    console.error('Mật khẩu không khớp:', email);
+    throw new Error('Sai email hoặc mật khẩu');
+  }
+
+  // Kiểm tra xem người dùng đã xác thực email chưa
+  if (!user.isVerified) {
+    console.error('Tài khoản chưa được xác thực:', email);
+    throw new Error('Tài khoản chưa được xác thực');
+  }
+
+  // Tạo JWT token
+  const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  console.log('Đăng nhập thành công cho người dùng:', email);
+  return token;
+};

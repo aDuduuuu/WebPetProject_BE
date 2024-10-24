@@ -11,3 +11,8 @@ export const registerValidation = [
     .custom((value, { req }) => value === req.body.password)
     .withMessage('Mật khẩu không trùng khớp')
 ];
+
+export const loginValidation = [
+  check('email').isEmail().withMessage('Email không hợp lệ'),
+  check('password').notEmpty().withMessage('Vui lòng nhập mật khẩu')
+];
