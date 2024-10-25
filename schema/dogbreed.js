@@ -2,6 +2,7 @@
 import mongoose from 'mongoose';
 
 const dogBreedSchema = new mongoose.Schema({
+    name: {type: String, required: true},
     image: { type: String, required: true },
     height: {
         min: { type: Number, required: true },
