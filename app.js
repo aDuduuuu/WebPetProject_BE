@@ -8,6 +8,8 @@ import dotenv from 'dotenv';
 import { postRoute } from './routes/postRoute.js';
 import { dognameRoute } from './routes/dognameRoute.js';
 import { dogBreedRoute } from './routes/dogbreedRoute.js';
+import { dogSellerRoute } from './routes/dogsellerRoute.js';
+import { productRoute } from './routes/productRoute.js';
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ postRoute(app);
 dognameRoute(app);
 trainerRoute(app);
 dogBreedRoute(app);
+dogSellerRoute(app);
+productRoute(app);
 
 // Export ứng dụng
 export default app;
