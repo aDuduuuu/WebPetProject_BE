@@ -3,4 +3,4 @@ import trainerSchema from '../schema/trainer.js';  // Import schema từ file tr
 
 const Trainer = mongoose.model('Trainer', trainerSchema);  // Sử dụng schema để tạo model
 
-export default Trainer;
+export { Trainer };

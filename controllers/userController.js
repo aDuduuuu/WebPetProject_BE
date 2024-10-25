@@ -19,20 +19,13 @@ export const register = [
 
     try {
       const { email, firstName, lastName, password, role } = req.body;
-      const newUser = await registerUser(email, firstName, lastName, password, role);
-      res.status(201).json({
-        EC: 0,
-        EM: 'Đăng ký thành công. Email xác thực đã được gửi đến bạn.',
-        DT: newUser
+      const response = await registerUser(email, firstName, lastName, password, role);
+      return res.status(response.EC === 0 ? 201 : 400).json({
+        EC: response.EC,
+        EM: response.EM,
+        DT: response.DT
       });
     } catch (error) {
-      if (error.message === 'Email đã tồn tại') {
-        return res.status(400).json({
-          EC: 400,
-          EM: error.message,
-          DT: ''
-        });
-      }
       res.status(500).json({
         EC: 500,
         EM: 'Lỗi máy chủ, vui lòng thử lại sau.',
@@ -89,29 +82,23 @@ export const login = [
 
     try {
       const { email, password } = req.body;
-      const token = await loginUser(email, password);
+      const response = await loginUser(email, password);
+
+      if (response.EC !== 0) {
+        return res.status(400).json({
+          EC: response.EC,
+          EM: response.EM,
+          DT: response.DT
+        });
+      }
 
       res.status(200).json({
         EC: 0,
         EM: 'Đăng nhập thành công',
-        DT: { token }
+        DT: response.DT
       });
     } catch (error) {
       console.error('Lỗi đăng nhập:', error.message);
-
-      if (error.message === 'Sai email hoặc mật khẩu') {
-        return res.status(400).json({
-          EC: 400,
-          EM: error.message,
-          DT: ''
-        });
-      } else if (error.message === 'Tài khoản chưa được xác thực') {
-        return res.status(400).json({
-          EC: 400,
-          EM: error.message,
-          DT: ''
-        });
-      }
 
       res.status(500).json({
         EC: 500,
