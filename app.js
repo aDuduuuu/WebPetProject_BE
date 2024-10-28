@@ -5,6 +5,11 @@ import { userRoute } from './routes/userRoute.js'; // Import userRoute để s�
 import { spaRoute } from './routes/spaRoute.js'; // Import spaRoute để sử dụng initSpaRoute
 import { trainerRoute } from './routes/trainerRoute.js'; // Import trainerRoute để sử dụng initTrainerRoute
 import dotenv from 'dotenv';
+import { postRoute } from './routes/postRoute.js';
+import { dognameRoute } from './routes/dognameRoute.js';
+import { dogBreedRoute } from './routes/dogbreedRoute.js';
+import { dogSellerRoute } from './routes/dogsellerRoute.js';
+import { productRoute } from './routes/productRoute.js';
 
 dotenv.config();
 
@@ -17,14 +22,14 @@ const app = express();
 app.use(bodyParser.json());
 app.use(express.json()); // Middleware để cho phép sử dụng JSON trong req.body
 
-// Khởi tạo các route cho người dùng
 userRoute(app);
-
-// Khởi tạo các route cho Spa
 spaRoute(app);
-
-// Khởi tạo các route cho Trainer
+postRoute(app);
+dognameRoute(app);
 trainerRoute(app);
+dogBreedRoute(app);
+dogSellerRoute(app);
+productRoute(app);
 
 // Export ứng dụng
 export default app;

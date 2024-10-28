@@ -3,15 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/PetProject';
+const mongoURI = 'mongodb+srv://anhdungkf:vKjCBJSLDX9AoVRO@cluster0.omjtl.mongodb.net/products?retryWrites=true&w=majority&appName=Cluster0';
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(mongoURI, {
-      // Xóa các tùy chọn không còn cần thiết
-      serverSelectionTimeoutMS: 5000, // Tùy chọn thời gian chờ kết nối, nếu cần
+    const cnn = await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000 // Thời gian chờ kết nối là 5 giây
     });
-    console.log(`Connected to MongoDB: ${mongoURI}`);
+    console.log(`MongoDB Connected: ${cnn.connection.host}`);
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error.message}`);
     process.exit(1); // Thoát chương trình nếu không kết nối được
