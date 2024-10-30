@@ -96,9 +96,12 @@ const deleteSpaController = async (req, res) => {
 // Get Spa (by id or all spas)
 const getSpaController = async (req, res) => {
   try {
-    let id = req.params.id; // Lấy ID từ route nếu có
-    let response = await getSpa(id);
-    return res.status(response.EC === 0 ? 200 : 400).json({
+    let id = req.params.id; 
+    let page = req.query.page || 1; 
+    let limit = req.query.limit || 20; 
+
+    let response = await getSpa(id, page, limit);
+    return res.status(200).json({
       EC: response.EC,
       EM: response.EM,
       DT: response.DT

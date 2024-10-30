@@ -1,4 +1,4 @@
-import { createProduct, deleteProduct, updateProduct, getProduct } from "../controllers/productController.js";
+import { createProduct, deleteProduct, updateProduct, getProduct} from "../controllers/productController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();

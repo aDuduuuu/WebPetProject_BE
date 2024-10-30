@@ -87,12 +87,15 @@ const cdeleteProduct = async (req, res) => {
     }
 };
 
-// Get Product (by id or all products)
+// Get Product (by id, productCode, or all products with pagination)
 const cgetProduct = async (req, res) => {
     try {
         let id = req.params.id;
-        let useProductCode = req.query.useProductCode === "true"; // Check if we want to search by productCode
-        let response = await getProduct(id, useProductCode);
+        let useProductCode = req.query.useProductCode === "true"; // Kiểm tra nếu muốn tìm kiếm theo productCode
+        let limit = req.query.limit || 20; // Số lượng sản phẩm mỗi trang
+        let page = req.query.page || 1; // Trang cần lấy
+
+        let response = await getProduct(id, useProductCode, page, limit);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
@@ -108,4 +111,4 @@ const cgetProduct = async (req, res) => {
     }
 };
 
-export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct };
+export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct};
