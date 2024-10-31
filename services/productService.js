@@ -90,25 +90,31 @@ const updateProduct = async (id, data, useProductCode = false) => {
     }
 };
 
-// Get Product (by id or all products)
-const getProduct = async (id, useProductCode = false) => {
+const getProduct = async (id, useProductCode = false, page = 1, limit = 20) => {
     try {
         let product;
+        
         if (useProductCode) {
-            // Find product by productCode
+            // Tìm sản phẩm theo productCode
             product = await Product.findOne({ productCode: id });
         } else if (id) {
-            // Find product by MongoDB _id
+            // Tìm sản phẩm theo MongoDB _id
             product = await Product.findById(id);
         } else {
-            // Get all products
-            product = await Product.find();
+            // Lấy tất cả các sản phẩm với phân trang dựa trên page
+            limit = parseInt(limit) || 20; // Số lượng sản phẩm mặc định mỗi trang
+            page = parseInt(page) || 1; // Trang mặc định là 1
+            let skip = (page - 1) * limit; // Bỏ qua số lượng sản phẩm
+
+            console.log("Limit:", limit, "Page:", page, "Skip:", skip);
+
+            product = await Product.find().limit(limit).skip(skip);
         }
 
-        if (!product) {
+        if (!product || (Array.isArray(product) && product.length === 0)) {
             return {
                 EC: 404,
-                EM: "Product not found",
+                EM: "Product(s) not found",
                 DT: ""
             };
         }
@@ -128,4 +134,4 @@ const getProduct = async (id, useProductCode = false) => {
     }
 };
 
-export { createProduct, deleteProduct, updateProduct, getProduct };
+export { createProduct, deleteProduct, updateProduct, getProduct};

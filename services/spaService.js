@@ -74,7 +74,7 @@ const updateSpa = async (id, data) => {
 };
 
 // Get Spa (by id or all spas)
-const getSpa = async (id) => {
+const getSpa = async (id, page = 1, limit = 20) => {
   try {
     if (id) {
       // Tìm Spa theo ID
@@ -92,8 +92,25 @@ const getSpa = async (id) => {
         DT: spa,
       };
     } else {
-      // Lấy tất cả Spa nếu không có ID
-      let spas = await Spa.find();
+      // Tính toán số lượng Spa cần bỏ qua
+      limit = parseInt(limit) || 20; // Mặc định số lượng mỗi trang là 20
+      page = parseInt(page) || 1; // Mặc định trang là 1
+      let skip = (page - 1) * limit;
+
+      console.log("Limit:", limit, "Page:", page, "Skip:", skip);
+
+      // Lấy tất cả Spa với phân trang
+      let spas = await Spa.find().limit(limit).skip(skip);
+
+      // Kiểm tra nếu không có Spa nào ở trang hiện tại
+      if (!spas || spas.length === 0) {
+        return {
+          EC: 404,
+          EM: "No Spas found",
+          DT: "",
+        };
+      }
+
       return {
         EC: 0,
         EM: "All Spas retrieved successfully",
@@ -110,4 +127,5 @@ const getSpa = async (id) => {
   }
 };
 
-export { createSpa, deleteSpa, updateSpa, getSpa };
+
+export { createSpa, deleteSpa, updateSpa, getSpa};

@@ -1,24 +1,24 @@
-import { createProduct, deleteProduct, updateProduct, getProduct } from "../services/productService.js";
+import { createReview, updateReview, deleteReview, getReview } from "../services/reviewService.js";
 
-// Create Product
-const ccreateProduct = async (req, res) => {
+// Create Review
+const ccreateReview = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.name || !data.productCode || !data.productType || !data.price || !data.quantity) {
+        if (!data || !data.reviewID || !data.productID || !data.userID || !data.rating) {
             return res.status(200).json({
                 EC: 400,
                 EM: "Input is empty or incomplete",
                 DT: ""
             });
         }
-        let response = await createProduct(data);
+        let response = await createReview(data);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -27,12 +27,12 @@ const ccreateProduct = async (req, res) => {
     }
 };
 
-// Update Product
-const cupdateProduct = async (req, res) => {
+// Update Review
+const cupdateReview = async (req, res) => {
     try {
         let id = req.params.id;
         let data = req.body;
-        let useProductCode = req.query.useProductCode === "true"; // Check if we want to update by productCode
+        let useReviewID = req.query.useReviewID === "true"; // Kiểm tra nếu muốn cập nhật theo reviewID
 
         if (!id || !data) {
             return res.status(200).json({
@@ -42,14 +42,14 @@ const cupdateProduct = async (req, res) => {
             });
         }
 
-        let response = await updateProduct(id, data, useProductCode);
+        let response = await updateReview(id, data, useReviewID);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -58,27 +58,27 @@ const cupdateProduct = async (req, res) => {
     }
 };
 
-// Delete Product
-const cdeleteProduct = async (req, res) => {
+// Delete Review
+const cdeleteReview = async (req, res) => {
     try {
         let id = req.params.id;
-        let useProductCode = req.query.useProductCode === "true"; // Check if we want to delete by productCode
+        let useReviewID = req.query.useReviewID === "true"; // Kiểm tra nếu muốn xóa theo reviewID
         if (!id) {
             return res.status(200).json({
                 EC: 400,
-                EM: "Product ID or Code is required",
+                EM: "Review ID is required",
                 DT: ""
             });
         }
 
-        let response = await deleteProduct(id, useProductCode);
+        let response = await deleteReview(id, useReviewID);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -87,22 +87,20 @@ const cdeleteProduct = async (req, res) => {
     }
 };
 
-// Get Product (by id, productCode, or all products with pagination)
-const cgetProduct = async (req, res) => {
+// Get Review (by id or all reviews for a product)
+const cgetReview = async (req, res) => {
     try {
         let id = req.params.id;
-        let useProductCode = req.query.useProductCode === "true"; // Kiểm tra nếu muốn tìm kiếm theo productCode
-        let limit = req.query.limit || 20; // Số lượng sản phẩm mỗi trang
-        let page = req.query.page || 1; // Trang cần lấy
-
-        let response = await getProduct(id, useProductCode, page, limit);
+        let useReviewID = req.query.useReviewID === "true"; // Kiểm tra nếu muốn tìm kiếm theo reviewID
+        let productID = req.query.productID;
+        let response = await getReview(id, productID, useReviewID);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -111,4 +109,9 @@ const cgetProduct = async (req, res) => {
     }
 };
 
-export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct};
+export {
+    ccreateReview as createReview,
+    cupdateReview as updateReview,
+    cdeleteReview as deleteReview,
+    cgetReview as getReview
+};

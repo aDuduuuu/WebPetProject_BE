@@ -1,4 +1,4 @@
-import { createSpa, deleteSpa, updateSpa, getSpa } from "../controllers/spaController.js";
+import { createSpa, deleteSpa, updateSpa, getSpa} from "../controllers/spaController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 
