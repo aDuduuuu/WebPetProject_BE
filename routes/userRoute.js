@@ -11,7 +11,7 @@ const initUserRoute = (app) => {
   router.get('/users/verify-email', verifyEmail);
 
   // Route cho chức năng đăng nhập
-  router.post('/users/authentication', login);
+  router.post('/authentication', login);
 
   // Đưa router vào app với tiền tố '/api'
   return app.use('/api', router);
