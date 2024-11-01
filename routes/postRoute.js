@@ -7,7 +7,7 @@ let router = express.Router();
 
 let initPostRoute = (app) => {    
     router.post("/post", createPost);
-    router.get("/post/:id", getPost);
+    router.get("/post/:id?", getPost);
     router.put("/post/:id", updatePost);
     router.delete("/post/:id", deletePost);
 

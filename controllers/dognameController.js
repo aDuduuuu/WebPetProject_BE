@@ -104,12 +104,22 @@ const deleteDogNameController = async (req, res) => {
 // Get Dog Name (by id or all dog names)
 const getDogNameController = async (req, res) => {
   try {
-    let id = req.params.id; // Optional: fetch by ID if provided
+    let id = req.params.id;
+    let page = req.query.page || 1;
+    let limit = req.query.limit || 20;
 
-    // Call getDogName from service
-    let response = await getDogName(id);
+    // Allowed query parameters
+    const allowedQueries = ["page", "limit"];
+    const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
+    if (invalidQueries.length > 0) {
+      return res.status(400).json({
+        EC: 400,
+        EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
+        DT: ""
+      });
+    }
 
-    // Send response
+    let response = await getDogName(id, page, limit);
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,

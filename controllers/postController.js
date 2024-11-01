@@ -88,19 +88,33 @@ const cdeletePost = async (req, res) => {
     }
 };
 
-// Get Post (by id or all posts)
+// Get Post (by id or all posts with pagination)
 const cgetPost = async (req, res) => {
     try {
         let id = req.params.id;
-        let usePostID = req.query.usePostID === "true"; // Check if we want to search by postID
-        let response = await getPost(id, usePostID);
-        return res.status(200).json({
+        let usePostID = req.query.usePostID === "true";
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 20;
+
+        // Allowed query parameters
+        const allowedQueries = ["page", "limit", "usePostID"];
+        const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
+        if (invalidQueries.length > 0) {
+            return res.status(400).json({
+                EC: 400,
+                EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
+                DT: ""
+            });
+        }
+
+        let response = await getPost(id, usePostID, page, limit);
+        return res.status(response.EC === 200 ? 200 : 400).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -108,7 +122,5 @@ const cgetPost = async (req, res) => {
         });
     }
 };
-
-
 
 export { ccreatePost as createPost, cupdatePost as updatePost, cdeletePost as deletePost, cgetPost as getPost };

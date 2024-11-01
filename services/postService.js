@@ -91,31 +91,36 @@ const updatePost = async (id, data, usePostID = false) => {
     }
 };
 
-
 // Get Post (by id or all posts)
-const getPost = async (id, usePostID = false) => {
+const getPost = async (id, usePostID = false, page = 1, limit = 20) => {
     try {
-        let post;
-        if (usePostID) {
-            // Find post by postID
-            post = await Post.findOne({ postID: id });
+        let posts;
+        if (id) {
+            posts = usePostID ? await Post.findOne({ postID: id }) : await Post.findById(id);
+            if (!posts) {
+                return {
+                    EC: 404,
+                    EM: "Post not found",
+                    DT: ""
+                };
+            }
         } else {
-            // Find post by MongoDB _id
-            post = await Post.findById(id);
+            page = parseInt(page);
+            limit = parseInt(limit);
+            const skip = (page - 1) * limit;
+            posts = await Post.find().limit(limit).skip(skip);
+            if (!posts || posts.length === 0) {
+                return {
+                    EC: 404,
+                    EM: "No posts found",
+                    DT: ""
+                };
+            }
         }
-
-        if (!post) {
-            return {
-                EC: 404,
-                EM: "Post not found",
-                DT: ""
-            };
-        }
-
         return {
             EC: 200,
             EM: "Success",
-            DT: post
+            DT: posts
         };
     } catch (error) {
         console.log(error);
@@ -126,6 +131,5 @@ const getPost = async (id, usePostID = false) => {
         };
     }
 };
-
 
 export { createPost, deletePost, updatePost, getPost };

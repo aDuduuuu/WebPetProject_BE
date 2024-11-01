@@ -72,7 +72,7 @@ const updateDogName = async (id, data) => {
 };
 
 // Get Dog Name (by id or all names)
-const getDogName = async (id) => {
+const getDogName = async (id, page = 1, limit = 20) => {
   try {
     if (id) {
       let dogName = await DogName.findById(id);
@@ -89,7 +89,20 @@ const getDogName = async (id) => {
         DT: dogName,
       };
     } else {
-      let dogNames = await DogName.find();
+      limit = parseInt(limit) || 20;
+      page = parseInt(page) || 1;
+      let skip = (page - 1) * limit;
+
+      let dogNames = await DogName.find().limit(limit).skip(skip);
+
+      if (!dogNames || dogNames.length === 0) {
+        return {
+          EC: 404,
+          EM: "No dog names found",
+          DT: "",
+        };
+      }
+
       return {
         EC: 0,
         EM: "All dog names retrieved successfully",

@@ -91,35 +91,49 @@ const updateReview = async (id, data, useReviewID = false) => {
 };
 
 // Get Review (by id or all reviews for a product)
-const getReview = async (id, productID = null, useReviewID = false) => {
+const getReview = async (id, productID = null, useReviewID = false, page = 1, limit = 20) => {
     try {
-        let review;
-        if (useReviewID) {
-            // Find review by reviewID
-            review = await Review.findOne({ reviewID: id }).populate('productID userID');
-        } else if (id) {
-            // Find review by MongoDB _id
-            review = await Review.findById(id).populate('productID userID');
+        let reviews;
+        if (id) {
+            reviews = useReviewID
+                ? await Review.findOne({ reviewID: id }).populate('productID userID')
+                : await Review.findById(id).populate('productID userID');
+            if (!reviews) {
+                return {
+                    EC: 404,
+                    EM: "Review not found",
+                    DT: ""
+                };
+            }
         } else if (productID) {
-            // Get all reviews for a specific product
-            review = await Review.find({ productID }).populate('productID userID');
+            page = parseInt(page);
+            limit = parseInt(limit);
+            const skip = (page - 1) * limit;
+            reviews = await Review.find({ productID }).limit(limit).skip(skip).populate('productID userID');
+            if (!reviews || reviews.length === 0) {
+                return {
+                    EC: 404,
+                    EM: "No reviews found",
+                    DT: ""
+                };
+            }
         } else {
-            // Get all reviews
-            review = await Review.find().populate('productID userID');
+            page = parseInt(page);
+            limit = parseInt(limit);
+            const skip = (page - 1) * limit;
+            reviews = await Review.find().limit(limit).skip(skip).populate('productID userID');
+            if (!reviews || reviews.length === 0) {
+                return {
+                    EC: 404,
+                    EM: "No reviews found",
+                    DT: ""
+                };
+            }
         }
-
-        if (!review || (Array.isArray(review) && review.length === 0)) {
-            return {
-                EC: 404,
-                EM: "Review(s) not found",
-                DT: ""
-            };
-        }
-
         return {
             EC: 200,
             EM: "Success",
-            DT: review
+            DT: reviews
         };
     } catch (error) {
         console.error(error);
