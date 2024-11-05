@@ -72,7 +72,7 @@ const updateDogBreed = async (id, data) => {
 };
 
 // Get Dog Breed (by id or all breeds)
-const getDogBreed = async (id) => {
+const getDogBreed = async (id, page = 1, limit = 20) => {
   try {
     if (id) {
       let dogBreed = await DogBreed.findById(id);
@@ -89,7 +89,20 @@ const getDogBreed = async (id) => {
         DT: dogBreed,
       };
     } else {
-      let dogBreeds = await DogBreed.find();
+      limit = parseInt(limit) || 20;
+      page = parseInt(page) || 1;
+      let skip = (page - 1) * limit;
+
+      let dogBreeds = await DogBreed.find().limit(limit).skip(skip);
+
+      if (!dogBreeds || dogBreeds.length === 0) {
+        return {
+          EC: 404,
+          EM: "No dog breeds found",
+          DT: "",
+        };
+      }
+
       return {
         EC: 0,
         EM: "All dog breeds retrieved successfully",

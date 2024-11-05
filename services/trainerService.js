@@ -75,32 +75,36 @@ const updateTrainer = async (id, data) => {
 };
 
 // Get Trainer (by id or all trainers)
-const getTrainer = async (id) => {
+const getTrainer = async (id, page = 1, limit = 20) => {
   try {
+    let trainers;
     if (id) {
-      // Tìm Trainer theo ID
-      let trainer = await Trainer.findById(id);
-      if (!trainer) {
+      trainers = await Trainer.findById(id);
+      if (!trainers) {
         return {
           EC: 404,
           EM: "Trainer not found",
           DT: ""
         };
       }
-      return {
-        EC: 0,
-        EM: "Trainer retrieved successfully",
-        DT: trainer
-      };
     } else {
-      // Lấy tất cả Trainer nếu không có ID
-      let trainers = await Trainer.find();
-      return {
-        EC: 0,
-        EM: "All Trainers retrieved successfully",
-        DT: trainers
-      };
+      page = parseInt(page);
+      limit = parseInt(limit);
+      const skip = (page - 1) * limit;
+      trainers = await Trainer.find().limit(limit).skip(skip);
+      if (!trainers || trainers.length === 0) {
+        return {
+          EC: 404,
+          EM: "No trainers found",
+          DT: ""
+        };
+      }
     }
+    return {
+      EC: 200,
+      EM: "Success",
+      DT: trainers
+    };
   } catch (error) {
     console.error("Error retrieving Trainer:", error.message);
     return {

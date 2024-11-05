@@ -20,7 +20,6 @@ connectDB();
 const app = express();
 
 // Middleware
-app.use(bodyParser.json());
 app.use(express.json()); // Middleware để cho phép sử dụng JSON trong req.body
 
 userRoute(app);

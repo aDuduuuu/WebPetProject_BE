@@ -91,10 +91,24 @@ const cdeleteReview = async (req, res) => {
 const cgetReview = async (req, res) => {
     try {
         let id = req.params.id;
-        let useReviewID = req.query.useReviewID === "true"; // Kiểm tra nếu muốn tìm kiếm theo reviewID
+        let useReviewID = req.query.useReviewID === "true";
         let productID = req.query.productID;
-        let response = await getReview(id, productID, useReviewID);
-        return res.status(200).json({
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 20;
+
+        // Allowed query parameters
+        const allowedQueries = ["page", "limit", "useReviewID", "productID"];
+        const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
+        if (invalidQueries.length > 0) {
+            return res.status(400).json({
+                EC: 400,
+                EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
+                DT: ""
+            });
+        }
+
+        let response = await getReview(id, productID, useReviewID, page, limit);
+        return res.status(response.EC === 200 ? 200 : 400).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT

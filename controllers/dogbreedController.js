@@ -101,8 +101,22 @@ const deleteDogBreedController = async (req, res) => {
 // Get Dog Breed (by id or all breeds)
 const getDogBreedController = async (req, res) => {
   try {
-    let id = req.params.id; // Lấy ID từ route nếu có
-    let response = await getDogBreed(id);
+    let id = req.params.id;
+    let page = req.query.page || 1;
+    let limit = req.query.limit || 20;
+
+    // Allowed query parameters
+    const allowedQueries = ["page", "limit"];
+    const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
+    if (invalidQueries.length > 0) {
+      return res.status(400).json({
+        EC: 400,
+        EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
+        DT: ""
+      });
+    }
+
+    let response = await getDogBreed(id, page, limit);
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
