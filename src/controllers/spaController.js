@@ -96,23 +96,19 @@ const deleteSpaController = async (req, res) => {
 // Get Spa (by id or all spas)
 const getSpaController = async (req, res) => {
   try {
-    let id = req.params.id; 
-    let page = req.query.page || 1; 
+    let id = req.params.id;
+    let page = req.query.page || 1;
     let limit = req.query.limit || 20;
 
-    // Allowed query parameters
-    const allowedQueries = ["page", "limit"];
-    const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-    if (invalidQueries.length > 0) {
-      return res.status(400).json({
-        EC: 400,
-        EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-        DT: ""
-      });
-    }
+    // Lấy bộ lọc từ query
+    const filters = {
+      location: req.query.location,
+      services: req.query.services ? req.query.services.split(',') : [] // Tách chuỗi services thành mảng
+    };
 
-    let response = await getSpa(id, page, limit);
-    return res.status(200).json({
+    let response = await getSpa(id, page, limit, filters);
+
+    return res.status(response.EC === 0 ? 200 : 404).json({
       EC: response.EC,
       EM: response.EM,
       DT: response.DT

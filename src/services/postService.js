@@ -92,43 +92,50 @@ const updatePost = async (id, data, usePostID = false) => {
 };
 
 // Get Post (by id or all posts)
-const getPost = async (id, usePostID = false, page = 1, limit = 20) => {
+const getPost = async (id, usePostID = false, page = 1, limit = 20, filters = {}, sortBy = '') => {
     try {
-        let posts;
+        let query = {};
+
+        // Nếu có `id` hoặc `postID`, lấy bài đăng cụ thể
         if (id) {
-            posts = usePostID ? await Post.findOne({ postID: id }) : await Post.findById(id);
-            if (!posts) {
-                return {
-                    EC: 404,
-                    EM: "Post not found",
-                    DT: ""
-                };
-            }
-        } else {
-            page = parseInt(page);
-            limit = parseInt(limit);
-            const skip = (page - 1) * limit;
-            posts = await Post.find().limit(limit).skip(skip);
-            if (!posts || posts.length === 0) {
-                return {
-                    EC: 404,
-                    EM: "No posts found",
-                    DT: ""
-                };
+            if (usePostID) {
+                const post = await Post.findOne({ postID: id });
+                if (!post) {
+                    return { EC: 404, EM: "Post not found", DT: "" };
+                }
+                return { EC: 200, EM: "Post retrieved successfully", DT: post };
+            } else {
+                const post = await Post.findById(id);
+                if (!post) {
+                    return { EC: 404, EM: "Post not found", DT: "" };
+                }
+                return { EC: 200, EM: "Post retrieved successfully", DT: post };
             }
         }
-        return {
-            EC: 200,
-            EM: "Success",
-            DT: posts
-        };
+
+        // Nếu không có id, áp dụng bộ lọc và sắp xếp cho danh sách bài đăng
+        if (filters.category) {
+            query.category = filters.category;
+        }
+
+        limit = parseInt(limit) || 20;
+        page = parseInt(page) || 1;
+        let skip = (page - 1) * limit;
+
+        let sortOption = {};
+        if (sortBy === 'time') sortOption.datePosted = -1;
+        if (sortBy === 'otime') sortOption.datePosted = 1;
+
+        const posts = await Post.find(query).limit(limit).skip(skip).sort(sortOption);
+
+        if (!posts || posts.length === 0) {
+            return { EC: 404, EM: "No posts found", DT: [] };
+        }
+
+        return { EC: 200, EM: "Posts retrieved successfully", DT: posts };
     } catch (error) {
-        console.log(error);
-        return {
-            EC: 500,
-            EM: "Error from server",
-            DT: ""
-        };
+        console.error("Error retrieving posts:", error);
+        return { EC: 500, EM: "Error from server", DT: "" };
     }
 };
 
