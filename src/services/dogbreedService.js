@@ -1,4 +1,4 @@
-import  DogBreed  from "../models/dogbreed.js";
+import DogBreed from "../models/dogbreed.js";
 
 // Create Dog Breed
 const createDogBreed = async (data) => {
@@ -10,6 +10,14 @@ const createDogBreed = async (data) => {
       DT: dogBreed,
     };
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+      // Lỗi trùng lặp tên
+      return {
+        EC: 400,
+        EM: "Dog breed name already exists",
+        DT: ""
+      };
+    }
     console.error("Error creating dog breed:", error);
     return {
       EC: 500,
@@ -22,7 +30,7 @@ const createDogBreed = async (data) => {
 // Delete Dog Breed
 const deleteDogBreed = async (id) => {
   try {
-    let dogBreed = await DogBreed.findByIdAndDelete(id);
+    const dogBreed = await DogBreed.findByIdAndDelete(id);
     if (!dogBreed) {
       return {
         EC: 404,
@@ -48,7 +56,7 @@ const deleteDogBreed = async (id) => {
 // Update Dog Breed
 const updateDogBreed = async (id, data) => {
   try {
-    let dogBreed = await DogBreed.findByIdAndUpdate(id, data, { new: true });
+    let dogBreed = await DogBreed.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     if (!dogBreed) {
       return {
         EC: 404,
@@ -62,6 +70,14 @@ const updateDogBreed = async (id, data) => {
       DT: dogBreed,
     };
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+      // Lỗi trùng lặp tên khi cập nhật
+      return {
+        EC: 400,
+        EM: "Dog breed name already exists",
+        DT: ""
+      };
+    }
     console.error("Error updating dog breed:", error);
     return {
       EC: 500,
@@ -71,11 +87,11 @@ const updateDogBreed = async (id, data) => {
   }
 };
 
-// Get Dog Breed (by id or all breeds)
+// Get Dog Breed (by ID or all breeds with pagination)
 const getDogBreed = async (id, page = 1, limit = 20) => {
   try {
     if (id) {
-      let dogBreed = await DogBreed.findById(id);
+      const dogBreed = await DogBreed.findById(id);
       if (!dogBreed) {
         return {
           EC: 404,
@@ -91,9 +107,10 @@ const getDogBreed = async (id, page = 1, limit = 20) => {
     } else {
       limit = parseInt(limit) || 20;
       page = parseInt(page) || 1;
-      let skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
-      let dogBreeds = await DogBreed.find().limit(limit).skip(skip);
+      // Chỉ lấy ra các trường name và description
+      const dogBreeds = await DogBreed.find({}, "name description").limit(limit).skip(skip);
 
       if (!dogBreeds || dogBreeds.length === 0) {
         return {
@@ -119,4 +136,69 @@ const getDogBreed = async (id, page = 1, limit = 20) => {
   }
 };
 
-export { createDogBreed, deleteDogBreed, updateDogBreed, getDogBreed };
+// Search Dog Breeds with filters and pagination
+const searchDogBreeds = async (filters, page = 1, limit = 20) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    // Thực hiện tìm kiếm với các bộ lọc và phân trang
+    const dogBreeds = await DogBreed.find(filters)
+      .select("name description") // Chỉ lấy các trường name và description
+      .limit(limit)
+      .skip(skip);
+
+    if (dogBreeds.length === 0) {
+      return {
+        EC: 404,
+        EM: "No dog breeds found for the given filters",
+        DT: "",
+      };
+    }
+
+    return {
+      EC: 0,
+      EM: "Dog breeds retrieved successfully",
+      DT: dogBreeds,
+    };
+  } catch (error) {
+    console.error("Error retrieving dog breeds with filters:", error);
+    return {
+      EC: 500,
+      EM: "Error retrieving dog breeds",
+      DT: error.message,
+    };
+  }
+};
+
+// Get Dog Breed Details by Name
+const getDogBreedDetailsByName = async (name) => {
+  try {
+    const dogBreed = await DogBreed.findOne({ name }).select(
+      "name image height weight lifespan affectionateWithFamily goodWithOtherDogs goodWithYoungChildren sheddingLevel coatGroomingFrequency droolingLevel coatType coatLength opennessToStrangers watchdogProtectiveNature playfulnessLevel adaptabilityLevel trainabilityLevel barkingLevel energyLevel mentalStimulationNeeds colors description history"
+    );
+
+    if (!dogBreed) {
+      return {
+        EC: 404,
+        EM: "Dog breed not found",
+        DT: "",
+      };
+    }
+
+    return {
+      EC: 0,
+      EM: "Dog breed details retrieved successfully",
+      DT: dogBreed,
+    };
+  } catch (error) {
+    console.error("Error retrieving dog breed details:", error);
+    return {
+      EC: 500,
+      EM: "Error retrieving dog breed details",
+      DT: error.message,
+    };
+  }
+};
+
+export { createDogBreed, deleteDogBreed, updateDogBreed, getDogBreed, searchDogBreeds, getDogBreedDetailsByName };
+
