@@ -90,37 +90,35 @@ const cdeleteProduct = async (req, res) => {
 // Get Product (by id, productCode, or all products with pagination)
 const cgetProduct = async (req, res) => {
     try {
-      let id = req.params.id;
-      let useProductCode = req.query.useProductCode === "true";
-      let page = req.query.page || 1;
-      let limit = req.query.limit || 20;
-  
-      // Allowed query parameters
-      const allowedQueries = ["page", "limit", "useProductCode"];
-      const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-      if (invalidQueries.length > 0) {
-        return res.status(400).json({
-          EC: 400,
-          EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-          DT: ""
+        let id = req.params.id;
+        let useProductCode = req.query.useProductCode === "true";
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 20;
+
+        // Lấy bộ lọc từ query
+        const filters = {
+            Type: req.query.Type,
+            minPrice: req.query.minPrice ? parseFloat(req.query.minPrice) : undefined,
+            maxPrice: req.query.maxPrice ? parseFloat(req.query.maxPrice) : undefined,
+        };
+
+        const sortBy = req.query.sortBy || '';
+
+        let response = await getProduct(id, useProductCode, page, limit, filters, sortBy);
+
+        return res.status(response.EC === 200 ? 200 : 404).json({
+            EC: response.EC,
+            EM: response.EM,
+            DT: response.DT
         });
-      }
-  
-      let response = await getProduct(id, useProductCode, page, limit);
-      return res.status(200).json({
-        EC: response.EC,
-        EM: response.EM,
-        DT: response.DT
-      });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        EC: 500,
-        EM: "Error from server",
-        DT: ""
-      });
+        console.log("Error in cgetProduct:", error);
+        return res.status(500).json({
+            EC: 500,
+            EM: "Error from server",
+            DT: ""
+        });
     }
-  };
-  
+};
 
 export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct};

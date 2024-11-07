@@ -4,8 +4,8 @@ import { createPost, updatePost, deletePost, getPost } from "../services/postSer
 const ccreatePost = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.author || !data.title || !data.content || !data.image || !data.postID) {
-            return res.status(200).json({
+        if (!data || !data.author || !data.category || !data.title || !data.content || !data.image || !data.postID) {
+            return res.status(400).json({
                 EC: 400,
                 EM: "Input is empty",
                 DT: ""
@@ -96,25 +96,21 @@ const cgetPost = async (req, res) => {
         let page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 20;
 
-        // Allowed query parameters
-        const allowedQueries = ["page", "limit", "usePostID"];
-        const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-        if (invalidQueries.length > 0) {
-            return res.status(400).json({
-                EC: 400,
-                EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-                DT: ""
-            });
-        }
+        const filters = {
+            category: req.query.category
+        };
 
-        let response = await getPost(id, usePostID, page, limit);
-        return res.status(response.EC === 200 ? 200 : 400).json({
+        const sortBy = req.query.sortBy || '';
+
+        let response = await getPost(id, usePostID, page, limit, filters, sortBy);
+
+        return res.status(response.EC === 200 ? 200 : 404).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.error(error);
+        console.log("Error in cgetPost:", error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",

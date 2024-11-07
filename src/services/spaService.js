@@ -73,8 +73,8 @@ const updateSpa = async (id, data) => {
   }
 };
 
-// Get Spa (by id or all spas)
-const getSpa = async (id, page = 1, limit = 20) => {
+// Get Spa (by id or all spas with filters)
+const getSpa = async (id, page = 1, limit = 20, filters = {}) => {
   try {
     if (id) {
       // Tìm Spa theo ID
@@ -92,17 +92,28 @@ const getSpa = async (id, page = 1, limit = 20) => {
         DT: spa,
       };
     } else {
+      // Áp dụng bộ lọc
+      const query = {};
+
+      // Lọc theo `province` trong `location`
+      if (filters.location) {
+        query["location.province"] = filters.location;
+      }
+
+      // Lọc theo nhiều `services` nếu có
+      if (filters.services && filters.services.length > 0) {
+        query["services"] = { $in: filters.services };
+      }
+
       // Tính toán số lượng Spa cần bỏ qua
-      limit = parseInt(limit) || 20; // Mặc định số lượng mỗi trang là 20
-      page = parseInt(page) || 1; // Mặc định trang là 1
+      limit = parseInt(limit) || 20;
+      page = parseInt(page) || 1;
       let skip = (page - 1) * limit;
 
-      console.log("Limit:", limit, "Page:", page, "Skip:", skip);
+      // Lấy tất cả Spa với phân trang và bộ lọc
+      let spas = await Spa.find(query).limit(limit).skip(skip);
 
-      // Lấy tất cả Spa với phân trang
-      let spas = await Spa.find().limit(limit).skip(skip);
-
-      // Kiểm tra nếu không có Spa nào ở trang hiện tại
+      // Kiểm tra nếu không có Spa nào
       if (!spas || spas.length === 0) {
         return {
           EC: 404,
@@ -127,5 +138,4 @@ const getSpa = async (id, page = 1, limit = 20) => {
   }
 };
 
-
-export { createSpa, deleteSpa, updateSpa, getSpa};
+export { createSpa, deleteSpa, updateSpa, getSpa };

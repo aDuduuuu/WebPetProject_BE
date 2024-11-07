@@ -92,19 +92,13 @@ const getTrainerController = async (req, res) => {
     let page = req.query.page || 1;
     let limit = req.query.limit || 20;
 
-    // Allowed query parameters
-    const allowedQueries = ["page", "limit"];
-    const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-    if (invalidQueries.length > 0) {
-      return res.status(400).json({
-        EC: 400,
-        EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-        DT: ""
-      });
-    }
+    const filters = {
+      location: req.query.location,
+      services: req.query.services ? req.query.services.split(",") : []
+    };
 
-    let response = await getTrainer(id, page, limit);
-    return res.status(response.EC === 200 ? 200 : 400).json({
+    let response = await getTrainer(id, page, limit, filters);
+    return res.status(response.EC === 0 ? 200 : 404).json({
       EC: response.EC,
       EM: response.EM,
       DT: response.DT

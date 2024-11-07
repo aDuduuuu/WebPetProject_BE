@@ -75,23 +75,38 @@ const updateTrainer = async (id, data) => {
 };
 
 // Get Trainer (by id or all trainers)
-const getTrainer = async (id, page = 1, limit = 20) => {
+const getTrainer = async (id, page = 1, limit = 20, filters = {}) => {
   try {
-    let trainers;
     if (id) {
-      trainers = await Trainer.findById(id);
-      if (!trainers) {
+      let trainer = await Trainer.findById(id);
+      if (!trainer) {
         return {
           EC: 404,
           EM: "Trainer not found",
           DT: ""
         };
       }
+      return {
+        EC: 0,
+        EM: "Trainer retrieved successfully",
+        DT: trainer
+      };
     } else {
-      page = parseInt(page);
+      const query = {};
+
+      if (filters.location) {
+        query["location.province"] = filters.location;
+      }
+
+      if (filters.services && filters.services.length > 0) {
+        query["services"] = { $in: filters.services };
+      }
+
       limit = parseInt(limit);
+      page = parseInt(page);
       const skip = (page - 1) * limit;
-      trainers = await Trainer.find().limit(limit).skip(skip);
+
+      let trainers = await Trainer.find(query).limit(limit).skip(skip);
       if (!trainers || trainers.length === 0) {
         return {
           EC: 404,
@@ -99,12 +114,13 @@ const getTrainer = async (id, page = 1, limit = 20) => {
           DT: ""
         };
       }
+
+      return {
+        EC: 0,
+        EM: "Trainers retrieved successfully",
+        DT: trainers
+      };
     }
-    return {
-      EC: 200,
-      EM: "Success",
-      DT: trainers
-    };
   } catch (error) {
     console.error("Error retrieving Trainer:", error.message);
     return {
