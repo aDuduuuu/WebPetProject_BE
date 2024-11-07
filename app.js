@@ -13,6 +13,7 @@ import { productRoute } from './src/routes/productRoute.js';
 import { reviewRoute } from './src/routes/reviewRoute.js';
 import helmet from 'helmet';
 import cors from 'cors';
+import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ dogBreedRoute(app);
 dogSellerRoute(app);
 productRoute(app);
 reviewRoute(app);
+favoriteItemRoute(app);
 
 // Export ứng dụng
 export default app;
