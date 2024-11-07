@@ -1,7 +1,7 @@
 import { validationResult } from 'express-validator';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
-import { registerUser, loginUser } from '../services/userService.js';
+import { registerUser, loginUser, getUserProfile } from '../services/userService.js';
 import { registerValidation, loginValidation } from '../validators/userValidator.js';
 
 export const register = [
@@ -108,3 +108,21 @@ export const login = [
     }
   }
 ];
+
+export const getProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const response = await getUserProfile(userId);
+    return res.status(response.EC === 0 ? 200 : 404).json({
+      EC: response.EC,
+      EM: response.EM,
+      DT: response.DT
+    });
+  } catch (error) {
+    res.status(500).json({
+      EC: 500,
+      EM: 'Lỗi máy chủ, vui lòng thử lại sau.',
+      DT: ''
+    });
+  }
+};
