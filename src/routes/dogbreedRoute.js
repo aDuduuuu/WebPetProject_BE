@@ -10,7 +10,7 @@ const initDogBreedRoute = (app) => {
   // Định nghĩa các route liên quan đến Dog Breed
   router.post("/dogbreeds", createDogBreed); // Tạo mới Dog Breed
   router.get("/dogbreeds/:id?", getDogBreed); // Lấy thông tin Dog Breed (theo ID hoặc tất cả nếu không có ID)
-  router.put("/dogbreeds/:id", updateDogBreed); // Cập nhật Dog Breed theo ID
+  router.patch("/dogbreeds/:id", updateDogBreed); // Cập nhật Dog Breed theo ID
   router.delete("/dogbreeds/:id", deleteDogBreed); // Xóa Dog Breed theo ID
 
   // Sử dụng router với tiền tố /api

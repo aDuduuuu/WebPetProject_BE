@@ -10,7 +10,7 @@ const initSpaRoute = (app) => {
   // Định nghĩa các route liên quan đến Spa
   router.post("/spas", createSpa); // Tạo mới Spa
   router.get("/spas/:id?", getSpa); // Lấy thông tin Spa (theo ID hoặc tất cả nếu không có ID)
-  router.put("/spas/:id", updateSpa); // Cập nhật Spa theo ID
+  router.patch("/spas/:id", updateSpa); // Cập nhật Spa theo ID
   router.delete("/spas/:id", deleteSpa); // Xóa Spa theo ID
 
   // Sử dụng router với tiền tố /api
