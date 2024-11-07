@@ -6,10 +6,10 @@ dotenv.config();
 let router = express.Router();
 
 let initReviewRoute = (app) => {
-    router.post("/review", createReview); // Create a new Review
-    router.get("/review/:id?", getReview); // Get Review by ID
-    router.patch("/review/:id", updateReview); // Update Review by ID
-    router.delete("/review/:id", deleteReview); // Delete Review by ID
+    router.post("/reviews", createReview); // Create a new Review
+    router.get("/reviews/:id?", getReview); // Get Review by ID
+    router.patch("/reviews/:id", updateReview); // Update Review by ID
+    router.delete("/reviews/:id", deleteReview); // Delete Review by ID
 
     return app.use("/api/", router);
 };

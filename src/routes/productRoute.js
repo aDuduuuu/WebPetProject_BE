@@ -6,10 +6,10 @@ dotenv.config();
 let router = express.Router();
 
 let initProductRoute = (app) => {    
-    router.post("/product", createProduct); // Create a new product
-    router.get("/product/:id?", getProduct); // Get a product by ID, productCode, or all products
-    router.patch("/product/:id", updateProduct); // Update a product by ID or productCode
-    router.delete("/product/:id", deleteProduct); // Delete a product by ID or productCode
+    router.post("/products", createProduct); // Create a new product
+    router.get("/products/:id?", getProduct); // Get a product by ID, productCode, or all products
+    router.patch("/products/:id", updateProduct); // Update a product by ID or productCode
+    router.delete("/products/:id", deleteProduct); // Delete a product by ID or productCode
 
     return app.use("/api/", router);
 };
