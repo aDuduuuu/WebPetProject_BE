@@ -6,10 +6,10 @@ dotenv.config();
 let router = express.Router();
 
 let initDogSellerRoute = (app) => {    
-    router.post("/dogseller", createDogSeller); // Create a new Dog Seller
-    router.get("/dogseller/:id?", getDogSeller); // Get Dog Seller by ID
-    router.patch("/dogseller/:id", updateDogSeller); // Update Dog Seller by ID
-    router.delete("/dogseller/:id", deleteDogSeller); // Delete Dog Seller by ID
+    router.post("/dogsellers", createDogSeller); // Create a new Dog Seller
+    router.get("/dogsellers/:id?", getDogSeller); // Get Dog Seller by ID
+    router.patch("/dogsellers/:id", updateDogSeller); // Update Dog Seller by ID
+    router.delete("/dogsellers/:id", deleteDogSeller); // Delete Dog Seller by ID
 
     return app.use("/api/", router);
 };
