@@ -119,4 +119,36 @@ const getDogName = async (id, page = 1, limit = 20) => {
   }
 };
 
-export { createDogName, deleteDogName, updateDogName, getDogName };
+// Get Dog Names by Category with Pagination
+const getDogNamesByCategory = async (category, page = 1, limit = 20) => {
+  try {
+    limit = parseInt(limit) || 20;
+    page = parseInt(page) || 1;
+    let skip = (page - 1) * limit;
+
+    let dogNames = await DogName.find({ category }).limit(limit).skip(skip);
+
+    if (!dogNames || dogNames.length === 0) {
+      return {
+        EC: 404,
+        EM: "No dog names found for the given category",
+        DT: "",
+      };
+    }
+
+    return {
+      EC: 0,
+      EM: "Dog names retrieved successfully",
+      DT: dogNames,
+    };
+  } catch (error) {
+    console.error("Error retrieving dog names by category:", error);
+    return {
+      EC: 500,
+      EM: "Error retrieving dog names by category",
+      DT: error.message,
+    };
+  }
+};
+
+export { createDogName, deleteDogName, updateDogName, getDogName, getDogNamesByCategory };
