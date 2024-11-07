@@ -1,9 +1,9 @@
 import express from 'express';
-import connectDB from './src/mongoose.js'; // Sử dụng connectDB từ mongoose.js
+import connectDB from './src/mongoose.js';
 import bodyParser from 'body-parser';
-import { userRoute } from './src/routes/userRoute.js'; // Import userRoute để sử dụng initUserRoute
-import { spaRoute } from './src/routes/spaRoute.js'; // Import spaRoute để sử dụng initSpaRoute
-import { trainerRoute } from './src/routes/trainerRoute.js'; // Import trainerRoute để sử dụng initTrainerRoute
+import { userRoute } from './src/routes/userRoute.js';
+import { spaRoute } from './src/routes/spaRoute.js';
+import { trainerRoute } from './src/routes/trainerRoute.js';
 import dotenv from 'dotenv';
 import { postRoute } from './src/routes/postRoute.js';
 import { dognameRoute } from './src/routes/dognameRoute.js';
@@ -11,6 +11,8 @@ import { dogBreedRoute } from './src/routes/dogbreedRoute.js';
 import { dogSellerRoute } from './src/routes/dogsellerRoute.js';
 import { productRoute } from './src/routes/productRoute.js';
 import { reviewRoute } from './src/routes/reviewRoute.js';
+import helmet from 'helmet';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -19,9 +21,14 @@ connectDB();
 
 const app = express();
 
-// Middleware
-app.use(express.json()); // Middleware để cho phép sử dụng JSON trong req.body
+// Middleware bảo mật
+app.use(helmet()); // Sử dụng Helmet để tăng cường bảo mật
+app.use(cors()); // Sử dụng CORS để cho phép các yêu cầu từ các nguồn khác nhau
 
+// Middleware để cho phép sử dụng JSON trong req.body
+app.use(express.json());
+
+// Định nghĩa các route
 userRoute(app);
 spaRoute(app);
 postRoute(app);
@@ -31,5 +38,6 @@ dogBreedRoute(app);
 dogSellerRoute(app);
 productRoute(app);
 reviewRoute(app);
+
 // Export ứng dụng
 export default app;

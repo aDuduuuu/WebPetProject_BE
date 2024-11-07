@@ -10,7 +10,7 @@ const initDogNameRoute = (app) => {
   // Define routes related to Dog Names
   router.post("/dogname", createDogName); // Create a new Dog Name
   router.get("/dogname/:id?", getDogName); // Get Dog Name (by ID or all if no ID is provided)
-  router.put("/dogname/:id", updateDogName); // Update Dog Name by ID
+  router.patch("/dogname/:id", updateDogName); // Update Dog Name by ID
   router.delete("/dogname/:id", deleteDogName); // Delete Dog Name by ID
 
   // Use router with the prefix /api

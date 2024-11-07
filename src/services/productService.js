@@ -106,7 +106,6 @@ const getProduct = async (id, useProductCode = false, page = 1, limit = 20) => {
             page = parseInt(page) || 1; // Trang mặc định là 1
             let skip = (page - 1) * limit; // Bỏ qua số lượng sản phẩm
 
-            console.log("Limit:", limit, "Page:", page, "Skip:", skip);
 
             product = await Product.find().limit(limit).skip(skip);
         }
