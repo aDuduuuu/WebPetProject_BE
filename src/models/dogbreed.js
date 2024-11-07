@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import dogBreedSchema from '../schema/dogbreed.js';  // Import schema từ file dogbreed.js
+import dogBreedSchema from '../schema/dogbreed.js';
 
-const DogBreed = mongoose.model('DogBreed', dogBreedSchema);  // Sử dụng schema để tạo model
+const DogBreed = mongoose.model('DogBreed', dogBreedSchema);
 
 export default DogBreed;
