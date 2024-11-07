@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 
 export const authenticateToken = (req, res, next) => {
+  if (req.path === '/authentication' || req.path === '/register') {
+    return next();
+  }
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
     return res.status(401).json({ EC: 401, EM: 'Bạn cần đăng nhập trước', DT: '' });

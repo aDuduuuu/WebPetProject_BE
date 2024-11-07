@@ -16,6 +16,7 @@ import { reviewRoute } from './src/routes/reviewRoute.js';
 import helmet from 'helmet';
 import cors from 'cors';
 import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
+import { cartItemRoute } from './src/routes/cartItemRoute.js';
 
 dotenv.config();
 
@@ -39,4 +40,6 @@ productRoute(app);
 reviewRoute(app);
 favoriteItemRoute(app);
 
+cartItemRoute(app);
+// Export ứng dụng
 export default app;

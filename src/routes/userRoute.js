@@ -15,7 +15,7 @@ const initUserRoute = (app) => {
   router.get('/users', authenticateToken, getProfile);
 
   // Đưa router vào app với tiền tố '/api'
-  return app.use('/api', router);
+  return app.use('/api/', router);
 };
 
 export { initUserRoute as userRoute };

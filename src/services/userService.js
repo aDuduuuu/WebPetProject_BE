@@ -103,7 +103,6 @@ export const loginUser = async (email, password) => {
         DT: ''
       };
     }
-
     // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
