@@ -87,62 +87,31 @@ const cdeleteDogSeller = async (req, res) => {
     }
 };
 
-// Get Dog Seller (by id or all sellers)
-// const cgetDogSeller = async (req, res) => {
-//     try {
-//         let id = req.params.id;
-//         let useSellerID = req.query.useSellerID === "true"; // Check if we want to search by sellerID
-//         let response = await getDogSeller(id, useSellerID);
-//         return res.status(200).json({
-//             EC: response.EC,
-//             EM: response.EM,
-//             DT: response.DT
-//         });
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(500).json({
-//             EC: 500,
-//             EM: "Error from server",
-//             DT: ""
-//         });
-//     }
-// };
-
 const cgetDogSeller = async (req, res) => {
     try {
         let id = req.params.id;
-        let { page = 1, limit = 20, useSellerID = "false" } = req.query;
+        let useSellerID = req.query.useSellerID === "true";
+        let page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 20;
 
-        // Allowed query parameters
-        const allowedQueries = ["page", "limit", "useSellerID"];
-        
-        // Check for unexpected query parameters
-        const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-        if (invalidQueries.length > 0) {
-            return res.status(400).json({
-                EC: 400,
-                EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-                DT: ""
-            });
-        }
+        // Lấy bộ lọc từ query, chuyển đổi `breed` thành mảng nếu có nhiều giá trị
+        const filters = {
+            location: req.query.location,
+            breed: req.query.breed ? req.query.breed.split(',') : [] // Tách chuỗi breed thành mảng
+        };
 
-        // Parse page and limit as integers
-        page = parseInt(page);
-        limit = parseInt(limit);
-        useSellerID = useSellerID === "true";
+        let response = await getDogSeller(id, useSellerID, page, limit, filters);
 
-        // Call the service function
-        let response = await getDogSeller(id, useSellerID, page, limit);
-        return res.status(response.EC === 200 ? 200 : 400).json({
+        return res.status(response.EC === 200 ? 200 : 404).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
         });
     } catch (error) {
-        console.error("Error getting Dog Seller:", error.message);
+        console.log("Error in cgetDogSeller:", error);
         return res.status(500).json({
             EC: 500,
-            EM: "Internal Server Error: " + error.message,
+            EM: "Error from server",
             DT: ""
         });
     }
