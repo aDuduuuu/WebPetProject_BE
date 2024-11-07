@@ -142,3 +142,30 @@ export const loginUser = async (email, password) => {
     };
   }
 };
+
+export const getUserProfile = async (userId) => {
+  try {
+    const user = await User.findById(userId).select('-passwordHash');
+    if (!user) {
+      return {
+        EC: 404,
+        EM: 'Người dùng không tồn tại',
+        DT: ''
+      };
+    }
+
+    return {
+      EC: 0,
+      EM: 'Lấy thông tin người dùng thành công',
+      DT: user
+    };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    return {
+      EC: 500,
+      EM: 'Lỗi máy chủ khi lấy thông tin người dùng',
+      DT: ''
+    };
+  }
+};
+
