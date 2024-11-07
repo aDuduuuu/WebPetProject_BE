@@ -17,7 +17,8 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
 import { cartItemRoute } from './src/routes/cartItemRoute.js';
-
+import { orderRoute } from './src/routes/orderRoute.js';
+import { authenticateToken } from './src/middlewares/authMiddleware.js';
 dotenv.config();
 
 connectDB();
@@ -27,6 +28,7 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+//app.all('/api/*', authenticateToken);
 
 userRoute(app);
 authRoute(app);
@@ -39,7 +41,7 @@ dogSellerRoute(app);
 productRoute(app);
 reviewRoute(app);
 favoriteItemRoute(app);
-
+orderRoute(app);
 cartItemRoute(app);
 // Export ứng dụng
 export default app;

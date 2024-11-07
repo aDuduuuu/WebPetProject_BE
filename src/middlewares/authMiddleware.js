@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export const authenticateToken = (req, res, next) => {
-  if (req.path === '/authentication' || req.path === '/register') {
+  if (req.path === '/api/authentication' || req.path === '/register') {
     return next();
   }
   const token = req.headers['authorization']?.split(' ')[1];
