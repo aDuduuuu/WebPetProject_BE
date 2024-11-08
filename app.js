@@ -1,7 +1,9 @@
+// app.js
 import express from 'express';
 import connectDB from './src/mongoose.js';
 import bodyParser from 'body-parser';
 import { userRoute } from './src/routes/userRoute.js';
+import { authRoute } from './src/routes/authRoute.js';
 import { spaRoute } from './src/routes/spaRoute.js';
 import { trainerRoute } from './src/routes/trainerRoute.js';
 import dotenv from 'dotenv';
@@ -17,20 +19,16 @@ import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
 
 dotenv.config();
 
-// Kết nối đến MongoDB
 connectDB();
 
 const app = express();
 
-// Middleware bảo mật
-app.use(helmet()); // Sử dụng Helmet để tăng cường bảo mật
-app.use(cors()); // Sử dụng CORS để cho phép các yêu cầu từ các nguồn khác nhau
-
-// Middleware để cho phép sử dụng JSON trong req.body
+app.use(helmet());
+app.use(cors());
 app.use(express.json());
 
-// Định nghĩa các route
 userRoute(app);
+authRoute(app);
 spaRoute(app);
 postRoute(app);
 dognameRoute(app);
@@ -41,5 +39,4 @@ productRoute(app);
 reviewRoute(app);
 favoriteItemRoute(app);
 
-// Export ứng dụng
 export default app;
