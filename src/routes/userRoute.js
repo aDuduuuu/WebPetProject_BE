@@ -11,11 +11,8 @@ const initUserRoute = (app) => {
   // Route cho chức năng xác thực email
   router.get('/users/verify-email', verifyEmail);
 
-  // Route cho chức năng đăng nhập
-  router.post('/authentication', login);
-
   // Route để kiểm tra thông tin người dùng
-  router.get('/users/profile', authenticateToken, getProfile);
+  router.get('/users', authenticateToken, getProfile);
 
   // Đưa router vào app với tiền tố '/api'
   return app.use('/api', router);

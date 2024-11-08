@@ -12,7 +12,7 @@ const initDogBreedRoute = (app) => {
   //router.get("/dogbreeds/:id?", getDogBreed); // Lấy thông tin Dog Breed (theo ID hoặc tất cả nếu không có ID)
   router.patch("/dogbreeds/:id", updateDogBreed); // Cập nhật Dog Breed theo ID
   router.delete("/dogbreeds/:id", deleteDogBreed); // Xóa Dog Breed theo ID
-  router.get("/search/dogbreeds", searchDogBreeds); // Tìm kiếm Dog Breeds với bộ lọc
+  router.get("/dogbreeds", searchDogBreeds); // Tìm kiếm Dog Breeds với bộ lọc
   router.get("/dogbreeds/:name", getDogBreedDetailsByName); // Lấy thông tin chi tiết của Dog Breed theo tên
 
   // Sử dụng router với tiền tố /api
