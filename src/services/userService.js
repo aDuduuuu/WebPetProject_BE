@@ -125,7 +125,7 @@ export const loginUser = async (email, password) => {
     }
 
     // Tạo JWT token
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
     console.log('Đăng nhập thành công cho người dùng:', email);
     return {
       EC: 0,

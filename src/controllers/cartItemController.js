@@ -106,7 +106,7 @@ const cgetCartItem = async (req, res) => {
         let page = parseInt(req?.query?.page) || 1;
         let limit = parseInt(req?.query?.limit) || 20;
         let response = await getCartItem({ id, userID: req.user.id, page, limit });
-        return res.status(response.EC === 200 ? 200 : 400).json({
+        return res.status(response.EC === 0 ? 200 : 400).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
