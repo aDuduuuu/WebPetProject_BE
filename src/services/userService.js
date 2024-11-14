@@ -58,7 +58,7 @@ export const registerUser = async (email, firstName, lastName, password, role = 
 
 const sendVerificationEmail = async (userEmail, token) => {
   try {
-    const verificationLink = `${process.env.BASE_URL}/api/users/verify-email?token=${token}`;
+    const verificationLink = `${process.env.BASE_URL}/api/register/verify-email?token=${token}`;
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
