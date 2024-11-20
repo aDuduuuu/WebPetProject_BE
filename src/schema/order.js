@@ -16,7 +16,7 @@ const orderSchema = new mongoose.Schema({
     },
   },
   shipmentMethod: {
-    value: {
+    price: {
       type: Number,
     },
     name: {
@@ -24,7 +24,7 @@ const orderSchema = new mongoose.Schema({
     },
   },
   orderUser: {
-    name: {
+    fullName: {
       type: String,
     },
     phoneNumber: {
@@ -43,9 +43,14 @@ const orderSchema = new mongoose.Schema({
       type: String,
     },
   },
+  expectDeliveryDate: {
+    from: { type: Date },
+    to: { type: Date },
+  },
   tax: { type: Number },
   status: { type: String, required: true },
   totalAmount: { type: Number, required: true },
+  totalPrice: { type: Number, required: true },
   orderItems: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'OrderItem'

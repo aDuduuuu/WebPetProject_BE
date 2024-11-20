@@ -9,7 +9,7 @@ let router = express.Router();
 
 let initOrderRoute = (app) => {
     router.post("/", authenticateToken, createOrder);
-    router.get("/:id?", getOrder);
+    router.get("/:id?", authenticateToken, getOrder);
     router.patch("/:id", updateOrder);
     router.delete("/:id", deleteOrder);
 

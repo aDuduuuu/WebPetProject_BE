@@ -3,6 +3,7 @@ import CartItem from "../models/cartitem.js";
 import OrderItem from "../models/orderitem.js";
 import Order from "../models/order.js";
 import Product from "../models/product.js";
+import { statusOrder } from "../utils/constant.js";
 
 // Create OrderItem
 const createOrder = async (data) => {
@@ -55,9 +56,11 @@ const createOrder = async (data) => {
                 paymentMethod: data.paymentMethod,
                 shipmentMethod: data.shipmentMethod,
                 orderUser: data.orderUser,
-                totalAmount: data.totalPrice,
+                totalAmount: data.totalAmount,
+                totalPrice: data.totalPrice,
+                expectDeliveryDate: data.expectDeliveryDate,
                 tax: data.tax,
-                status: "Pending",
+                status: statusOrder.ordered,
                 orderItems: arrItem
             });
             if (order) {
