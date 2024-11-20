@@ -18,6 +18,7 @@ import cors from 'cors';
 import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
 import { cartItemRoute } from './src/routes/cartItemRoute.js';
 import { orderRoute } from './src/routes/orderRoute.js';
+import { filterRoute } from './src/routes/filterRoute.js';
 
 dotenv.config();
 
@@ -43,5 +44,6 @@ reviewRoute(app);
 favoriteItemRoute(app);
 orderRoute(app);
 cartItemRoute(app);
+filterRoute(app);
 
 export default app;

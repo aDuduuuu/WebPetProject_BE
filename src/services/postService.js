@@ -139,4 +139,15 @@ const getPost = async (id, usePostID = false, page = 1, limit = 20, filters = {}
     }
 };
 
-export { createPost, deletePost, updatePost, getPost };
+const getPostCategories = async () => {
+    try {
+      const categories = await Post.distinct("category");
+      return categories; // Returns an array of unique categories
+    } catch (error) {
+      console.error("Error fetching post categories:", error.message);
+      throw new Error(error.message);
+    }
+  };
+  
+
+export { createPost, deletePost, updatePost, getPost, getPostCategories };

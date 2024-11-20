@@ -1,4 +1,4 @@
-import { createPost, updatePost, deletePost, getPost } from "../services/postService.js";
+import { createPost, updatePost, deletePost, getPost, getPostCategories } from "../services/postService.js";
 
 // Create Post
 const ccreatePost = async (req, res) => {
@@ -119,4 +119,30 @@ const cgetPost = async (req, res) => {
     }
 };
 
-export { ccreatePost as createPost, cupdatePost as updatePost, cdeletePost as deletePost, cgetPost as getPost };
+const getAllPostCategories = async (req, res) => {
+    try {
+      const categories = await getPostCategories();
+      if (categories) {
+        return res.status(200).json({
+          EC: 0,
+          EM: "Post categories retrieved successfully",
+          DT: categories,
+        });
+      } else {
+        return res.status(404).json({
+          EC: 1,
+          EM: "No categories found",
+          DT: [],
+        });
+      }
+    } catch (error) {
+      console.error("Error retrieving post categories:", error.message);
+      return res.status(500).json({
+        EC: 500,
+        EM: "Internal Server Error",
+        DT: "",
+      });
+    }
+  };
+
+export { ccreatePost as createPost, cupdatePost as updatePost, cdeletePost as deletePost, cgetPost as getPost, getAllPostCategories };

@@ -1,4 +1,4 @@
-import { createDogSeller, updateDogSeller, deleteDogSeller, getDogSeller } from "../services/dogsellerService.js";
+import { createDogSeller, updateDogSeller, deleteDogSeller, getDogSeller, getUniqueBreed } from "../services/dogsellerService.js";
 
 // Create Dog Seller
 const ccreateDogSeller = async (req, res) => {
@@ -117,9 +117,28 @@ const cgetDogSeller = async (req, res) => {
     }
 };
 
+const getBreedsController = async (req, res) => {
+    try {
+      const response = await getUniqueBreed();
+      return res.status(response.EC === 0 ? 200 : 500).json({
+        EC: response.EC,
+        EM: response.EM,
+        DT: response.DT,
+      });
+    } catch (error) {
+      console.error("Error getting services:", error.message);
+      return res.status(500).json({
+        EC: 500,
+        EM: "Internal Server Error: " + error.message,
+        DT: "",
+      });
+    }
+  };
+
 export {
     ccreateDogSeller as createDogSeller,
     cupdateDogSeller as updateDogSeller,
     cdeleteDogSeller as deleteDogSeller,
-    cgetDogSeller as getDogSeller
+    cgetDogSeller as getDogSeller,
+    getBreedsController
 };

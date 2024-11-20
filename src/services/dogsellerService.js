@@ -137,4 +137,22 @@ const getDogSeller = async (id, useSellerID = false, page = 1, limit = 20, filte
     }
 };
 
-export { createDogSeller, deleteDogSeller, updateDogSeller, getDogSeller };
+const getUniqueBreed = async () => {
+    try {
+      const services = await DogSeller.distinct("breeds"); // Get unique services
+      return {
+        EC: 0,
+        EM: "Services retrieved successfully",
+        DT: services,
+      };
+    } catch (error) {
+      console.error("Error retrieving services:", error);
+      return {
+        EC: 500,
+        EM: "Error retrieving services",
+        DT: error.message,
+      };
+    }
+  };
+
+export { createDogSeller, deleteDogSeller, updateDogSeller, getDogSeller , getUniqueBreed};

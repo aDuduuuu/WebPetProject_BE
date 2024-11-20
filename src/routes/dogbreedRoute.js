@@ -14,7 +14,7 @@ const router = express.Router();
 
 const initDogBreedRoute = (app) => {
   router.post("/", createDogBreed); // Create a new Dog Breed
-  router.get("/:id", getDogBreed); // Get Dog Breed by ID
+  router.get("/:id?", getDogBreed); // Get Dog Breed by ID
   router.patch("/:id", updateDogBreed); // Update Dog Breed by ID
   router.delete("/:id", deleteDogBreed); // Delete Dog Breed by ID
 
