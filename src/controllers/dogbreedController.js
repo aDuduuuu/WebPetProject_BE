@@ -140,22 +140,6 @@ const searchDogBreedsController = async (req, res) => {
     const page = req.query.page || 1;
     const limit = req.query.limit || 20;
 
-    // Các tham số lọc được phép
-    const allowedQueries = [
-      "page", "limit", "group", "activityLevel", "barkingLevelDescription", 
-      "size", "shedding", "characteristics", "coatType", "trainability"
-    ];
-
-    // Kiểm tra các tham số không hợp lệ
-    const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
-    if (invalidQueries.length > 0) {
-      return res.status(400).json({
-        EC: 400,
-        EM: `Invalid query parameters: ${invalidQueries.join(", ")}`,
-        DT: ""
-      });
-    }
-
     // Tạo bộ lọc từ các query parameters
     const filters = {};
     if (req.query.group) filters.group = req.query.group;
@@ -164,18 +148,19 @@ const searchDogBreedsController = async (req, res) => {
     if (req.query.size) filters.size = req.query.size;
     if (req.query.shedding) filters.shedding = req.query.shedding;
     if (req.query.characteristics) {
-      // Chuyển đổi characteristics thành mảng để hỗ trợ nhiều giá trị
       filters.characteristics = { $in: req.query.characteristics.split(",") };
     }
     if (req.query.coatType) filters.coatType = req.query.coatType;
     if (req.query.trainability) filters.trainability = req.query.trainability;
 
-    // Gọi service `searchDogBreeds` với các filters và thông tin phân trang
+    // Gọi service
     const response = await searchDogBreeds(filters, page, limit);
+
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
-      DT: response.DT
+      DT: response.DT,
+      totalBreeds: response.totalBreeds || 0, // Trả về totalBreeds nếu có
     });
   } catch (error) {
     console.error("Error searching Dog Breeds:", error.message);
