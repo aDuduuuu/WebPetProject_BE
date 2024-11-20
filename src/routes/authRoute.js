@@ -12,7 +12,7 @@ const initAuthRoute = (app) => {
     router.post('/authentication', login);
 
     // Route for email verification
-    router.get('/register/verify-email', verifyEmail);
+    router.get('/verify-email', verifyEmail);
 
     return app.use('/api', router);
 };

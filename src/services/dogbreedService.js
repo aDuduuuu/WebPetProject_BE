@@ -141,24 +141,19 @@ const searchDogBreeds = async (filters, page = 1, limit = 20) => {
   try {
     const skip = (page - 1) * limit;
 
-    // Thực hiện tìm kiếm với các bộ lọc và phân trang
+    // Tính tổng số giống chó dựa trên bộ lọc
+    const totalBreeds = await DogBreed.countDocuments(filters);
+
+    // Lấy danh sách giống chó theo bộ lọc và phân trang
     const dogBreeds = await DogBreed.find(filters)
-      .select("name description") // Chỉ lấy các trường name và description
       .limit(limit)
       .skip(skip);
 
-    if (dogBreeds.length === 0) {
-      return {
-        EC: 404,
-        EM: "No dog breeds found for the given filters",
-        DT: "",
-      };
-    }
-
     return {
       EC: 0,
-      EM: "Dog breeds retrieved successfully",
+      EM: dogBreeds.length ? "Dog breeds retrieved successfully" : "No dog breeds found for the given filters",
       DT: dogBreeds,
+      totalBreeds, // Trả về tổng số lượng giống chó sau khi áp dụng bộ lọc
     };
   } catch (error) {
     console.error("Error retrieving dog breeds with filters:", error);
@@ -201,4 +196,3 @@ const getDogBreedDetailsByName = async (name) => {
 };
 
 export { createDogBreed, deleteDogBreed, updateDogBreed, getDogBreed, searchDogBreeds, getDogBreedDetailsByName };
-
