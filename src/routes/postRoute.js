@@ -6,10 +6,10 @@ dotenv.config();
 let router = express.Router();
 
 let initPostRoute = (app) => {    
-    router.post("/post", createPost);
-    router.get("/post/:id?", getPost);
-    router.patch("/post/:id", updatePost);
-    router.delete("/post/:id", deletePost);
+    router.post("/posts", createPost);
+    router.get("/posts/:id?", getPost);
+    router.patch("/posts/:id", updatePost);
+    router.delete("/posts/:id", deletePost);
 
     return app.use("/api/", router);
 };
