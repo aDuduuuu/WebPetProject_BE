@@ -69,8 +69,6 @@ const cupdateCartItem = async (req, res) => {
         });
     }
 };
-
-
 // Delete CartItem
 const cdeleteCartItem = async (req, res) => {
     try {
@@ -83,7 +81,7 @@ const cdeleteCartItem = async (req, res) => {
             });
         }
 
-        let response = await deleteCartItem(id);
+        let response = await deleteCartItem(id, req.user.id);
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,

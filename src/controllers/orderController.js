@@ -4,7 +4,7 @@ import { createOrder, updateOrder, deleteOrder, getOrder } from "../services/ord
 const ccreateOrder = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.deliveryAddress) {
+        if (!data || !data.totalPrice || !data.paymentMethod || !data.shipmentMethod || !data.orderUser || !data.totalPrice || !data.tax) {
             return res.status(200).json({
                 EC: 400,
                 EM: "Invalid input",

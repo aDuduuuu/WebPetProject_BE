@@ -7,7 +7,43 @@ const orderSchema = new mongoose.Schema({
     required: true
   },
   orderDate: { type: Date, default: Date.now },
-  deliveryAddress: { type: String, required: true },
+  paymentMethod: {
+    value: {
+      type: Number,
+    },
+    name: {
+      type: String,
+    },
+  },
+  shipmentMethod: {
+    value: {
+      type: Number,
+    },
+    name: {
+      type: String,
+    },
+  },
+  orderUser: {
+    name: {
+      type: String,
+    },
+    phoneNumber: {
+      type: String,
+    },
+    address: {
+      type: String,
+    },
+    ward: {
+      type: String,
+    },
+    district: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+  },
+  tax: { type: Number },
   status: { type: String, required: true },
   totalAmount: { type: Number, required: true },
   orderItems: [{

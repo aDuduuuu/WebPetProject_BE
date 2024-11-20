@@ -181,7 +181,6 @@ const getCartItem = async (data) => {
                 cartItems = await CartItem.find({ _id: { $in: cart.items } }).limit(data.limit).skip(data.limit * (data.page - 1));
                 for (let i = 0; i < cartItems.length; i++) {
                     let product = await Product.findById(cartItems[i].product.toString());
-
                     if (cartItems[i].quantity > product.quantity) {
                         await CartItem.findByIdAndUpdate(cartItems[i]._id, { quantity: product.quantity }, { new: true })
                         cartItems[i].quantity = product.quantity;

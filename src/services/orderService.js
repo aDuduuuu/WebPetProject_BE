@@ -16,7 +16,6 @@ const createOrder = async (data) => {
             };
         } else {
             let arrItem = [];
-            let totalAmount = 0;
             for (let i = 0; i < card.items.length; i++) {
                 let cartItem = await CartItem.findById(card.items[i].toString());
                 if (cartItem) {
@@ -28,7 +27,6 @@ const createOrder = async (data) => {
                             let orderItem = await OrderItem.create({ product: cartItem.product, quantity: cartItem.quantity });
                             console.log("check orderItem", orderItem);
                             arrItem.push(orderItem._id.toString());
-                            totalAmount += product.price * cartItem.quantity;
                         } else {
                             return {
                                 EC: 500,
@@ -51,7 +49,17 @@ const createOrder = async (data) => {
                     };
                 }
             }
-            let order = await Order.create({ userID: data.userId, orderDate: Date.now(), deliveryAddress: data.deliveryAddress, status: "Pending", totalAmount: totalAmount, orderItems: arrItem });
+            let order = await Order.create({
+                userID: data.userId,
+                orderDate: Date.now(),
+                paymentMethod: data.paymentMethod,
+                shipmentMethod: data.shipmentMethod,
+                orderUser: data.orderUser,
+                totalAmount: data.totalPrice,
+                tax: data.tax,
+                status: "Pending",
+                orderItems: arrItem
+            });
             if (order) {
                 await Cart.findByIdAndUpdate(card._id, { items: [] }, { new: true });
                 return {
