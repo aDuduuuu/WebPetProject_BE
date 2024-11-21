@@ -130,7 +130,7 @@ export const loginUser = async (email, password) => {
     return {
       EC: 0,
       EM: 'Đăng nhập thành công',
-      DT: { token }
+      DT: { token, role: user.role }
     };
   } catch (error) {
     console.error('Error during login:', error);

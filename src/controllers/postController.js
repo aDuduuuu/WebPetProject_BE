@@ -4,7 +4,7 @@ import { createPost, updatePost, deletePost, getPost, getPostCategories } from "
 const ccreatePost = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.author || !data.category || !data.title || !data.content || !data.image || !data.postID) {
+        if (!data || !data.sdescription || !data.author || !data.category || !data.title || !data.content || !data.image || !data.postID) {
             return res.status(400).json({
                 EC: 400,
                 EM: "Input is empty",
