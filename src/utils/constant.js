@@ -3,4 +3,5 @@ export const statusOrder = {
     waitingShip: "waitingShip",
     shipping: "shipping",
     delivered: "delivered",
+    cancel: "cancel"
 }
