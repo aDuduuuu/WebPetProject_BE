@@ -1,4 +1,4 @@
-import { createTrainer, updateTrainer, deleteTrainer, getTrainer } from "../services/trainerService.js";
+import { createTrainer, updateTrainer, deleteTrainer, getTrainer, getUniqueServices } from "../services/trainerService.js";
 
 // Create Trainer
 const createTrainerController = async (req, res) => {
@@ -113,9 +113,28 @@ const getTrainerController = async (req, res) => {
   }
 };
 
+const getServicesController = async (req, res) => {
+  try {
+    const response = await getUniqueServices();
+    return res.status(response.EC === 0 ? 200 : 500).json({
+      EC: response.EC,
+      EM: response.EM,
+      DT: response.DT,
+    });
+  } catch (error) {
+    console.error("Error getting services:", error.message);
+    return res.status(500).json({
+      EC: 500,
+      EM: "Internal Server Error: " + error.message,
+      DT: "",
+    });
+  }
+};
+
 export {
   createTrainerController as createTrainer,
   updateTrainerController as updateTrainer,
   deleteTrainerController as deleteTrainer,
-  getTrainerController as getTrainer
+  getTrainerController as getTrainer,
+  getServicesController as getCServices
 };

@@ -131,4 +131,22 @@ const getTrainer = async (id, page = 1, limit = 20, filters = {}) => {
   }
 };
 
-export { createTrainer, deleteTrainer, updateTrainer, getTrainer };
+const getUniqueServices = async () => {
+  try {
+    const services = await Trainer.distinct("services"); // Get unique services
+    return {
+      EC: 0,
+      EM: "Services retrieved successfully",
+      DT: services,
+    };
+  } catch (error) {
+    console.error("Error retrieving services:", error);
+    return {
+      EC: 500,
+      EM: "Error retrieving services",
+      DT: error.message,
+    };
+  }
+};
+
+export { createTrainer, deleteTrainer, updateTrainer, getTrainer, getUniqueServices };

@@ -1,4 +1,4 @@
-import { createSpa, updateSpa, deleteSpa, getSpa } from "../services/spaService.js";
+import { createSpa, updateSpa, deleteSpa, getSpa, getUniqueServices } from "../services/spaService.js";
 
 // Create Spa
 const createSpaController = async (req, res) => {
@@ -123,9 +123,28 @@ const getSpaController = async (req, res) => {
   }
 };
 
+const getServicesController = async (req, res) => {
+  try {
+    const response = await getUniqueServices();
+    return res.status(response.EC === 0 ? 200 : 500).json({
+      EC: response.EC,
+      EM: response.EM,
+      DT: response.DT,
+    });
+  } catch (error) {
+    console.error("Error getting services:", error.message);
+    return res.status(500).json({
+      EC: 500,
+      EM: "Internal Server Error: " + error.message,
+      DT: "",
+    });
+  }
+};
+
 export {
   createSpaController as createSpa,
   updateSpaController as updateSpa,
   deleteSpaController as deleteSpa,
-  getSpaController as getSpa
+  getSpaController as getSpa,
+  getServicesController as getServices,
 };
