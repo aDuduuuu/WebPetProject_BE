@@ -4,7 +4,7 @@ import { createOrder, updateOrder, deleteOrder, getOrder } from "../services/ord
 const ccreateOrder = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.deliveryAddress) {
+        if (!data || !data.totalPrice || !data.paymentMethod || !data.shipmentMethod || !data.orderUser || !data.totalPrice || !data.tax || !data.totalAmount || !data.expectDeliveryDate) {
             return res.status(200).json({
                 EC: 400,
                 EM: "Invalid input",
@@ -92,7 +92,7 @@ const cgetOrder = async (req, res) => {
         let page = parseInt(req?.query?.page) || 1;
         let limit = parseInt(req?.query?.limit) || 20;
         let response = await getOrder({ id, userID: req.user.id, page, limit });
-        return res.status(response.EC === 200 ? 200 : 400).json({
+        return res.status(response.EC === 0 ? 200 : 400).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
