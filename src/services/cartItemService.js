@@ -23,7 +23,7 @@ const createCartItem = async (data) => {
             }
             let cartItemNew = await CartItem.create({
                 product: data.product,
-                quantity: data.quantity
+                quantity: +data.quantity
             });
             if (cartItemNew) {
                 let cartNew = await Cart.create({ userID: data.userID, items: [cartItemNew._id] });
@@ -39,10 +39,10 @@ const createCartItem = async (data) => {
             for (let i = 0; i < cart.items.length; i++) {
                 let cartItem = await CartItem.findById(cart.items[i].toString());
                 if (cartItem.product.toString() === data.product) {
-                    if (cartItem.quantity + data.quantity > product.quantity) {
-                        data.quantity = product.quantity - cartItem.quantity;
+                    if (+cartItem.quantity + +data.quantity > +product.quantity) {
+                        data.quantity = +product.quantity - +cartItem.quantity;
                     }
-                    let cartItemUpdate = await CartItem.findByIdAndUpdate(cartItem._id, { quantity: cartItem.quantity + data.quantity }, { new: true });
+                    let cartItemUpdate = await CartItem.findByIdAndUpdate(cartItem._id, { quantity: +cartItem.quantity + +data.quantity }, { new: true });
                     if (cartItemUpdate) {
                         return {
                             EC: 0,
@@ -133,7 +133,7 @@ const updateCartItem = async (id, data) => {
             data.quantity = product.quantity;
         }
         // Tìm và cập nhật CartItem theo ID
-        let cartItem = await CartItem.findByIdAndUpdate(id, { quantity: data.quantity }, { new: true }); // `new: true` trả về tài liệu đã cập nhật
+        let cartItem = await CartItem.findByIdAndUpdate(id, { quantity: +data.quantity }, { new: true }); // `new: true` trả về tài liệu đã cập nhật
         if (!cartItem) {
             return {
                 EC: 404,

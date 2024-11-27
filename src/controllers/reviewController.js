@@ -4,13 +4,14 @@ import { createReview, updateReview, deleteReview, getReview } from "../services
 const ccreateReview = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.reviewID || !data.productID || !data.userID || !data.rating) {
+        if (!data || !data.productID || !data.rating) {
             return res.status(200).json({
                 EC: 400,
                 EM: "Input is empty or incomplete",
                 DT: ""
             });
         }
+        data.userID = req.user.id;
         let response = await createReview(data);
         return res.status(200).json({
             EC: response.EC,
@@ -91,7 +92,7 @@ const cdeleteReview = async (req, res) => {
 const cgetReview = async (req, res) => {
     try {
         let id = req.params.id;
-        let useReviewID = req.query.useReviewID === "true";
+        let useReviewID = req.user.id;
         let productID = req.query.productID;
         let page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 20;
@@ -108,7 +109,7 @@ const cgetReview = async (req, res) => {
         }
 
         let response = await getReview(id, productID, useReviewID, page, limit);
-        return res.status(response.EC === 200 ? 200 : 400).json({
+        return res.status(response.EC === 0 ? 200 : 400).json({
             EC: response.EC,
             EM: response.EM,
             DT: response.DT
