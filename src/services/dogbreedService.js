@@ -88,7 +88,7 @@ const updateDogBreed = async (id, data) => {
 };
 
 // Get Dog Breed (by ID or all breeds with pagination)
-const getDogBreed = async (id, page = 1, limit = 20) => {
+const getDogBreed = async (id, page = 1, limit) => {
   try {
     if (id) {
       const dogBreed = await DogBreed.findById(id);
@@ -105,7 +105,7 @@ const getDogBreed = async (id, page = 1, limit = 20) => {
         DT: dogBreed,
       };
     } else {
-      limit = parseInt(limit) || 20;
+      limit = parseInt(limit);
       page = parseInt(page) || 1;
       const skip = (page - 1) * limit;
 
@@ -137,7 +137,7 @@ const getDogBreed = async (id, page = 1, limit = 20) => {
 };
 
 // Search Dog Breeds with filters and pagination
-const searchDogBreeds = async (filters, page = 1, limit = 20) => {
+const searchDogBreeds = async (filters, page = 1, limit) => {
   try {
     const skip = (page - 1) * limit;
 

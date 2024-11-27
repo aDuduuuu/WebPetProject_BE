@@ -105,7 +105,7 @@ const getDogBreedController = async (req, res) => {
   try {
     const id = req.params.id;
     const page = req.query.page || 1;
-    const limit = req.query.limit || 20;
+    const limit = req.query.limit;
 
     // Check for invalid query parameters
     const allowedQueries = ["page", "limit"];
@@ -138,7 +138,7 @@ const getDogBreedController = async (req, res) => {
 const searchDogBreedsController = async (req, res) => {
   try {
     const page = req.query.page || 1;
-    const limit = req.query.limit || 20;
+    const limit = req.query.limit;
 
     // Tạo bộ lọc từ các query parameters
     const filters = {};

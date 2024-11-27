@@ -10,7 +10,7 @@ export const registerUser = async (email, firstName, lastName, password, role = 
     if (existingUser) {
       return {
         EC: 400,
-        EM: 'Email đã tồn tại',
+        EM: 'Email already exists!',
         DT: ''
       };
     }
@@ -43,14 +43,14 @@ export const registerUser = async (email, firstName, lastName, password, role = 
 
     return {
       EC: 0,
-      EM: 'Đăng ký thành công, email xác thực đã được gửi',
+      EM: 'Registration successful, confirmation email has been sent!',
       DT: newUser
     };
   } catch (error) {
     console.error('Error during registration:', error);
     return {
       EC: 500,
-      EM: 'Lỗi máy chủ trong quá trình đăng ký',
+      EM: 'Server error during registration!',
       DT: ''
     };
   }
@@ -71,21 +71,21 @@ const sendVerificationEmail = async (userEmail, token) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
-      subject: 'Xác thực tài khoản của bạn',
-      text: `Nhấp vào liên kết sau để xác thực tài khoản của bạn: ${verificationLink}`
+      subject: 'Verify your account',
+      text: `Click the following link to authenticate your account: ${verificationLink}`
     };
 
     await transporter.sendMail(mailOptions);
     return {
       EC: 0,
-      EM: 'Email xác thực đã được gửi',
+      EM: 'Verification email has been sent',
       DT: ''
     };
   } catch (error) {
     console.error('Error sending email:', error);
     return {
       EC: 500,
-      EM: 'Không thể gửi email xác thực',
+      EM: 'Unable to send authentication email',
       DT: ''
     };
   }
@@ -96,47 +96,47 @@ export const loginUser = async (email, password) => {
     // Tìm người dùng theo email
     const user = await User.findOne({ email });
     if (!user) {
-      console.error('Email không tồn tại:', email);
+      console.error('Email does not exist:', email);
       return {
         EC: 404,
-        EM: 'Sai email hoặc mật khẩu',
+        EM: 'Wrong email or password',
         DT: ''
       };
     }
     // Kiểm tra mật khẩu
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch) {
-      console.error('Mật khẩu không khớp:', email);
+      console.error('Passwords do not match:', email);
       return {
         EC: 404,
-        EM: 'Sai email hoặc mật khẩu',
+        EM: 'Wrong email or password',
         DT: ''
       };
     }
 
     // Kiểm tra xem người dùng đã xác thực email chưa
     if (!user.isVerified) {
-      console.error('Tài khoản chưa được xác thực:', email);
+      console.error('Account has not been verified:', email);
       return {
         EC: 403,
-        EM: 'Tài khoản chưa được xác thực',
+        EM: 'Account has not been verified',
         DT: ''
       };
     }
 
     // Tạo JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    console.log('Đăng nhập thành công cho người dùng:', email);
+    console.log('Successful login for user:', email);
     return {
       EC: 0,
-      EM: 'Đăng nhập thành công',
+      EM: 'Log in successfully',
       DT: { token, role: user.role }
     };
   } catch (error) {
     console.error('Error during login:', error);
     return {
       EC: 500,
-      EM: 'Lỗi máy chủ trong quá trình đăng nhập',
+      EM: 'Server error during login process',
       DT: ''
     };
   }
@@ -148,21 +148,21 @@ export const getUserProfile = async (userId) => {
     if (!user) {
       return {
         EC: 404,
-        EM: 'Người dùng không tồn tại',
+        EM: 'User does not exist',
         DT: ''
       };
     }
 
     return {
       EC: 0,
-      EM: 'Lấy thông tin người dùng thành công',
+      EM: 'Retrieve user information successfully',
       DT: user
     };
   } catch (error) {
     console.error('Error fetching user profile:', error);
     return {
       EC: 500,
-      EM: 'Lỗi máy chủ khi lấy thông tin người dùng',
+      EM: 'Server error when retrieving user information',
       DT: ''
     };
   }

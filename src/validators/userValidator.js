@@ -1,18 +1,18 @@
 import { check } from 'express-validator';
 
 export const registerValidation = [
-  check('email').isEmail().withMessage('Email không hợp lệ'),
-  check('firstName').notEmpty().withMessage('Vui lòng nhập họ'),
-  check('lastName').notEmpty().withMessage('Vui lòng nhập tên'),
+  check('email').isEmail().withMessage('Invalid email'),
+  check('firstName').notEmpty().withMessage('Please enter your first name'),
+  check('lastName').notEmpty().withMessage('Please enter your last name'),
   check('password')
-    .isLength({ min: 6 }).withMessage('Mật khẩu phải có ít nhất 6 ký tự')
-    .matches(/\d/).withMessage('Mật khẩu phải chứa ít nhất một chữ số'),
+    .isLength({ min: 6 }).withMessage('Password must have at least 6 characters')
+    .matches(/\d/).withMessage('Password must contain at least one digit'),
   check('passwordConfirm')
     .custom((value, { req }) => value === req.body.password)
-    .withMessage('Mật khẩu không trùng khớp')
+    .withMessage('Passwords do not match')
 ];
 
 export const loginValidation = [
-  check('email').isEmail().withMessage('Email không hợp lệ'),
-  check('password').notEmpty().withMessage('Vui lòng nhập mật khẩu')
+  check('email').isEmail().withMessage('Invalid email'),
+  check('password').notEmpty().withMessage('Please enter your password')
 ];
