@@ -3,6 +3,7 @@ import CartItem from "../models/cartitem.js";
 import OrderItem from "../models/orderitem.js";
 import Order from "../models/order.js";
 import Product from "../models/product.js";
+import { ObjectId } from "mongodb";
 import { statusOrder } from "../utils/constant.js";
 
 // Create OrderItem
@@ -130,16 +131,16 @@ const deleteOrder = async (id) => {
 // Update OrderItem
 const updateOrder = async (id, data) => {
     try {
-        if (data.status === "Cancelled") {
+        if (data.status === statusOrder.cancel) {
             let order = await Order.findById(id);
             if (order) {
                 for (let i = 0; i < order.orderItems.length; i++) {
-                    let orderItem = await OrderItem.findById(order.orderItems[i].toString());
-                    await Product.findByIdAndUpdate(orderItem.product, { $inc: { quantity: orderItem.quantity } }, { new: true });
+                    let orderItem = await OrderItem.findById(new ObjectId(order.orderItems[i].toString()));
+                    await Product.findByIdAndUpdate(new ObjectId(orderItem.product.toString()), { $inc: { quantity: +orderItem.quantity } }, { new: true });
                 }
             }
         }
-        let order = await Order.findByIdAndUpdate(id, data, { new: true });
+        let order = await Order.findByIdAndUpdate(id, { status: data.status }, { new: true });
         if (!order) {
             return {
                 EC: 404,
@@ -160,6 +161,7 @@ const updateOrder = async (id, data) => {
             EM: "Error updating OrderItem",
             DT: error.message
         };
+
     }
 };
 

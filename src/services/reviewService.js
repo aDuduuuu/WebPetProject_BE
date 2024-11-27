@@ -3,19 +3,39 @@ import Review from "../models/review.js";
 // Create Review
 const createReview = async (data) => {
     try {
-        console.log(data);
-        let review = await Review.create(data);
-        return {
-            EC: 200,
-            EM: "Review created successfully",
-            DT: review
-        };
+        // Kiểm tra xem review đã tồn tại chưa
+        let existingReview = await Review.findOne({
+            userID: data.userID,
+            productID: data.productID,
+        });
+        if (existingReview) {
+            let updatedReview = await Review.findOneAndUpdate(existingReview._id, data, { new: true });
+            return {
+                EC: 0,
+                EM: "Successfully",
+                DT: updatedReview,
+            };
+        } else {
+            // Nếu không tồn tại, tạo review mới
+            let newReview = await Review.create({
+                productID: data.productID,
+                userID: data.userID,
+                rating: +data.rating,
+                comment: data.comment,
+
+            });
+            return {
+                EC: 0,
+                EM: "Successfully",
+                DT: newReview,
+            };
+        }
     } catch (error) {
         console.error(error);
         return {
             EC: 500,
             EM: "Error from server",
-            DT: ""
+            DT: "",
         };
     }
 };
@@ -131,7 +151,7 @@ const getReview = async (id, productID = null, useReviewID = false, page = 1, li
             }
         }
         return {
-            EC: 200,
+            EC: 0,
             EM: "Success",
             DT: reviews
         };

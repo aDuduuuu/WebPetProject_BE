@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
 
 const reviewSchema = new mongoose.Schema({
-  reviewID: {
-    type: Number,
-    required: true,
-    unique: true
-  },
   productID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product', // Tham chiếu đến bảng Product
