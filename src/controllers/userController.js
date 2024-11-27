@@ -12,8 +12,8 @@ export const register = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         EC: 400,
-        EM: 'Dữ liệu không hợp lệ',
-        DT: errors.array()
+        EM: errors.array()[0],
+        DT: ''
       });
     }
 
@@ -28,7 +28,7 @@ export const register = [
     } catch (error) {
       res.status(500).json({
         EC: 500,
-        EM: 'Lỗi máy chủ, vui lòng thử lại sau.',
+        EM: 'Server error, please try again later.',
         DT: ''
       });
     }
@@ -41,7 +41,7 @@ export const verifyEmail = async (req, res) => {
     if (!token) {
       return res.status(400).json({
         EC: 400,
-        EM: 'Token xác thực không hợp lệ hoặc đã hết hạn',
+        EM: 'The authentication token is invalid or has expired',
         DT: ''
       });
     }
@@ -55,13 +55,13 @@ export const verifyEmail = async (req, res) => {
 
     res.status(200).json({
       EC: 0,
-      EM: 'Xác thực email thành công. Tài khoản của bạn đã được kích hoạt.',
+      EM: 'Email authentication successful. Your account has been activated.',
       DT: ''
     });
   } catch (error) {
     res.status(500).json({
       EC: 500,
-      EM: 'Xác thực email không thành công',
+      EM: 'Email authentication failed',
       DT: ''
     });
   }
@@ -75,8 +75,8 @@ export const login = [
     if (!errors.isEmpty()) {
       return res.status(400).json({
         EC: 400,
-        EM: 'Dữ liệu không hợp lệ',
-        DT: errors.array()
+        EM: errors.array()[0],
+        DT: ''
       });
     }
 
@@ -94,15 +94,15 @@ export const login = [
 
       res.status(200).json({
         EC: 0,
-        EM: 'Đăng nhập thành công',
+        EM: 'Log in successfully',
         DT: response.DT
       });
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error.message);
+      console.error('Login error:', error.message);
 
       res.status(500).json({
         EC: 500,
-        EM: 'Lỗi máy chủ, vui lòng thử lại sau.',
+        EM: 'Server error, please try again later.',
         DT: ''
       });
     }
@@ -121,7 +121,7 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       EC: 500,
-      EM: 'Lỗi máy chủ, vui lòng thử lại sau.',
+      EM: 'Server error, please try again later.',
       DT: ''
     });
   }
