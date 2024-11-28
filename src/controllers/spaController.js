@@ -7,7 +7,7 @@ const createSpaController = async (req, res) => {
     let data = req.body;
 
     // Kiểm tra tính hợp lệ của dữ liệu đầu vào
-    if (!data || !data.name || !data.image || !data.location || !data.services || !data.contactInfo) {
+    if (!data || !data.name || !data.image || !data.location || !data.services || !data.contactInfo || !data.description) {
       return res.status(400).json({
         EC: 400,
         EM: "Input is missing or incomplete",
