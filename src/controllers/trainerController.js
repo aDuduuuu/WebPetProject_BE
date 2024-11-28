@@ -4,7 +4,7 @@ import { createTrainer, updateTrainer, deleteTrainer, getTrainer, getUniqueServi
 const createTrainerController = async (req, res) => {
   try {
     let data = req.body;
-    if (!data || !data.name || !data.image || !data.location || !data.services || !data.contactInfo) {
+    if (!data || !data.name || !data.image || !data.location || !data.services || !data.contactInfo||!data.description) {
       return res.status(400).json({
         EC: 400,
         EM: "Input is missing or incomplete",

@@ -10,6 +10,7 @@ const spaSchema = new mongoose.Schema({
       street: { type: String }
   },
   services: [{ type: String }],
+  description: {type:String},
   contactInfo: {
       phone: { type: String },
       email: { type: String }
