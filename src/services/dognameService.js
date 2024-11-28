@@ -72,8 +72,15 @@ const updateDogName = async (id, data) => {
 };
 
 // Get Dog Name (by id or all names)
-const getDogName = async (id, page = 1, limit = 20) => {
+const getDogName = async (id, page = 1, limit = 20, category = "") => {
   try {
+    let query = {};
+
+    // Nếu có category, thêm điều kiện lọc theo category
+    if (category) {
+      query.category = category;  // Lọc theo category nếu có
+    }
+
     if (id) {
       let dogName = await DogName.findById(id);
       if (!dogName) {
@@ -93,7 +100,8 @@ const getDogName = async (id, page = 1, limit = 20) => {
       page = parseInt(page) || 1;
       let skip = (page - 1) * limit;
 
-      let dogNames = await DogName.find().limit(limit).skip(skip);
+      // Tìm tất cả dog names, nếu có category thì lọc theo category
+      let dogNames = await DogName.find(query).limit(limit).skip(skip);
 
       if (!dogNames || dogNames.length === 0) {
         return {
@@ -118,6 +126,7 @@ const getDogName = async (id, page = 1, limit = 20) => {
     };
   }
 };
+
 
 // Get Dog Names by Category with Pagination
 const getDogNamesByCategory = async (category, page = 1, limit = 20) => {

@@ -136,9 +136,10 @@ const getDogNameController = async (req, res) => {
     let id = req.params.id;
     let page = req.query.page || 1;
     let limit = req.query.limit || 20;
+    let category = req.query.category || ""; // Lấy category từ query
 
     // Allowed query parameters
-    const allowedQueries = ["page", "limit"];
+    const allowedQueries = ["page", "limit", "category"];
     const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
     if (invalidQueries.length > 0) {
       return res.status(400).json({
@@ -148,7 +149,7 @@ const getDogNameController = async (req, res) => {
       });
     }
 
-    let response = await getDogName(id, page, limit);
+    let response = await getDogName(id, page, limit, category); // Truyền category vào service
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
@@ -163,6 +164,7 @@ const getDogNameController = async (req, res) => {
     });
   }
 };
+
 
 // Get Dog Names by Category with Pagination
 const getDogNamesByCategoryController = async (req, res) => {

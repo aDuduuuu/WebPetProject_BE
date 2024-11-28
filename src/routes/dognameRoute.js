@@ -9,7 +9,7 @@ const router = express.Router();
 const initDogNameRoute = (app) => {
   router.post("/dognames", createDogName); // Create a new Dog Name
   //router.get("/dognames/:id?", getDogName); // Get Dog Name (by ID or all if no ID is provided)
-  router.get("/dognames/:category", getDogNamesByCategory); // Get Dog Names by Category
+  router.get("/dognames", getDogName); // Get Dog Names by Category
   router.patch("/dognames/:id", updateDogName); // Update Dog Name by ID
   router.delete("/dognames/:id", deleteDogName); // Delete Dog Name by ID
 
