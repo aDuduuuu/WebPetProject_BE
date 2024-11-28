@@ -3,9 +3,9 @@ import { addFavoriteItem, removeFavoriteItem, getFavoriteItems } from "../servic
 // Add favorite item controller
 const addFavoriteItemController = async (req, res) => {
   try {
-    const { userID, itemID, type, referenceID } = req.body;
+    const { userID, type, referenceID } = req.body;
 
-    if (!userID || !itemID || !type || !referenceID) {
+    if (!userID || !type || !referenceID) {
       return res.status(400).json({
         EC: 400,
         EM: "Missing input data",
@@ -13,7 +13,7 @@ const addFavoriteItemController = async (req, res) => {
       });
     }
 
-    const response = await addFavoriteItem(userID, itemID, type, referenceID);
+    const response = await addFavoriteItem(userID, type, referenceID);
 
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
@@ -31,19 +31,48 @@ const addFavoriteItemController = async (req, res) => {
 };
 
 // Remove favorite item controller
+// const removeFavoriteItemController = async (req, res) => {
+//   try {
+//     const { userID, referenceID } = req.body;
+
+//     if (!userID || !referenceID) {
+//       return res.status(400).json({
+//         EC: 400,
+//         EM: "Missing input data",
+//         DT: ""
+//       });
+//     }
+
+//     const response = await removeFavoriteItem(userID, referenceID);
+
+//     return res.status(response.EC === 0 ? 200 : 404).json({
+//       EC: response.EC,
+//       EM: response.EM,
+//       DT: response.DT
+//     });
+//   } catch (error) {
+//     console.error("Error removing favorite item:", error.message);
+//     return res.status(500).json({
+//       EC: 500,
+//       EM: "Server error: " + error.message,
+//       DT: ""
+//     });
+//   }
+// };
+// controller.js
 const removeFavoriteItemController = async (req, res) => {
   try {
-    const { userID, itemID } = req.body;
+    let id = req.params.id;
 
-    if (!userID || !itemID) {
+    if (!id) {
       return res.status(400).json({
         EC: 400,
-        EM: "Missing input data",
+        EM: "Missing _id",
         DT: ""
       });
     }
 
-    const response = await removeFavoriteItem(userID, itemID);
+    const response = await removeFavoriteItem(id);  // Gọi service với _id
 
     return res.status(response.EC === 0 ? 200 : 404).json({
       EC: response.EC,

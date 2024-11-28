@@ -127,10 +127,11 @@ export const loginUser = async (email, password) => {
     // Tạo JWT token
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
     console.log('Successful login for user:', email);
+    console.log(token.DT);
     return {
       EC: 0,
       EM: 'Log in successfully',
-      DT: { token, role: user.role }
+      DT: { token, role: user.role, id: user._id }
     };
   } catch (error) {
     console.error('Error during login:', error);

@@ -1,11 +1,6 @@
 import mongoose from 'mongoose';
 
 const favoriteItemSchema = new mongoose.Schema({
-  itemID: {
-    type: Number,
-    required: true,
-    unique: true
-  },
   userID: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Tham chiếu đến bảng User
@@ -21,7 +16,14 @@ const favoriteItemSchema = new mongoose.Schema({
     required: true
   }
 }, {
-  timestamps: true // Tự động thêm createdAt và updatedAt
+  timestamps: true, // Tự động thêm createdAt và updatedAt
+  // Đảm bảo rằng userID và referenceID là duy nhất kết hợp với nhau
+  indexes: [
+    { 
+      fields: { userID: 1, referenceID: 1 },
+      options: { unique: true } // Đảm bảo chỉ có một đối tượng yêu thích duy nhất cho mỗi người dùng
+    }
+  ]
 });
 
 export default favoriteItemSchema;

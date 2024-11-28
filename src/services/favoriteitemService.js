@@ -1,9 +1,10 @@
 import FavoriteItem from "../models/favoriteitem.js";
 
 // Add a favorite item
-const addFavoriteItem = async (userID, itemID, type, referenceID) => {
+const addFavoriteItem = async (userID, type, referenceID) => {
   try {
-    const existingItem = await FavoriteItem.findOne({ userID, itemID });
+    // Kiểm tra xem người dùng đã yêu thích đối tượng này chưa (dựa trên userID và referenceID)
+    const existingItem = await FavoriteItem.findOne({ userID, referenceID });
     if (existingItem) {
       return {
         EC: 400,
@@ -12,7 +13,8 @@ const addFavoriteItem = async (userID, itemID, type, referenceID) => {
       };
     }
 
-    const newItem = await FavoriteItem.create({ userID, itemID, type, referenceID });
+    // Tạo mới mục yêu thích
+    const newItem = await FavoriteItem.create({ userID, type, referenceID });
     return {
       EC: 0,
       EM: "Successfully added to favorites",
@@ -29,9 +31,38 @@ const addFavoriteItem = async (userID, itemID, type, referenceID) => {
 };
 
 // Remove a favorite item
-const removeFavoriteItem = async (userID, itemID) => {
+// const removeFavoriteItem = async (userID, referenceID) => {
+//   try {
+//     // Xóa mục yêu thích dựa trên userID và referenceID
+//     const deletedItem = await FavoriteItem.findOneAndDelete({ userID, referenceID });
+//     if (!deletedItem) {
+//       return {
+//         EC: 404,
+//         EM: "Favorite item not found",
+//         DT: ""
+//       };
+//     }
+
+//     return {
+//       EC: 0,
+//       EM: "Successfully removed from favorites",
+//       DT: deletedItem
+//     };
+//   } catch (error) {
+//     console.error("Error removing favorite item:", error);
+//     return {
+//       EC: 500,
+//       EM: "Error removing from favorites",
+//       DT: error.message
+//     };
+//   }
+// };
+
+// service.js
+const removeFavoriteItem = async (_id) => {
   try {
-    const deletedItem = await FavoriteItem.findOneAndDelete({ userID, itemID });
+    // Xóa mục yêu thích dựa trên _id
+    const deletedItem = await FavoriteItem.findOneAndDelete({ _id });
     if (!deletedItem) {
       return {
         EC: 404,
@@ -55,6 +86,7 @@ const removeFavoriteItem = async (userID, itemID) => {
   }
 };
 
+
 // Get favorite items
 const getFavoriteItems = async (userID, type) => {
   try {
@@ -63,6 +95,7 @@ const getFavoriteItems = async (userID, type) => {
       query.type = type;
     }
 
+    // Lấy danh sách các mục yêu thích của người dùng và populate referenceID
     const favoriteItems = await FavoriteItem.find(query).populate('referenceID');
 
     if (favoriteItems.length === 0) {
