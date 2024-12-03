@@ -1,4 +1,4 @@
-import { createOrder, deleteOrder, updateOrder, getOrder } from "../controllers/orderController.js";
+import { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders } from "../controllers/orderController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 
@@ -9,11 +9,13 @@ let router = express.Router();
 
 let initOrderRoute = (app) => {
     router.post("/", authenticateToken, createOrder);
+    router.get("/all", authenticateToken, getAllOrders);
     router.get("/:id?", authenticateToken, getOrder);
+    
     router.patch("/:id", updateOrder);
     router.delete("/:id", deleteOrder);
 
-    return app.use("/api/order/", router);
+    return app.use("/api/orders/", router);
 };
 
 export { initOrderRoute as orderRoute };
