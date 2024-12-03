@@ -1,4 +1,4 @@
-import { createOrder, updateOrder, deleteOrder, getOrder } from "../services/orderService.js";
+import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders } from "../services/orderService.js";
 
 // Create Order
 const ccreateOrder = async (req, res) => {
@@ -107,4 +107,32 @@ const cgetOrder = async (req, res) => {
     }
 };
 
-export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder };
+const cgetAllOrders = async (req, res) => {
+    try {
+        let { page = 1, limit = 20, year, quarter, month, day } = req.query;
+
+        // Convert page and limit to integers
+        page = parseInt(page);
+        limit = parseInt(limit);
+
+        // Call the service function with the proper filters
+        let response = await getAllOrders({ year, quarter, month, day, page, limit });
+
+        return res.status(response.EC === 0 ? 200 : 400).json({
+            EC: response.EC,
+            EM: response.EM,
+            DT: response.DT // Trả về cả orders và tổng số đơn hàng
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            EC: 500,
+            EM: "Error from server",
+            DT: ""
+        });
+    }
+};
+
+
+
+export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders };

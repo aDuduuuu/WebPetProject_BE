@@ -230,4 +230,178 @@ const getOrder = async (data) => {
     }
 };
 
-export { createOrder, deleteOrder, updateOrder, getOrder };
+const getAllOrders = async (data) => {
+    try {
+        let orders;
+        const { year, quarter, month, day, page = 1, limit = 10 } = data;
+
+        // Ensure that page and limit are valid integers
+        const pageNum = Math.max(parseInt(page), 1);  // Default page = 1 if invalid
+        const limitNum = Math.max(parseInt(limit), 10);  // Default limit = 10 if invalid
+
+        // Build query filter
+        let filter = {};
+
+        // Filter by year (using orderDate)
+        if (year) {
+            const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+            const endOfYear = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
+            filter.orderDate = { $gte: startOfYear, $lt: endOfYear };
+        }
+
+        // Filter by quarter (using orderDate)
+        if (quarter) {
+            const validQuarter = parseInt(quarter);
+            if (isNaN(validQuarter) || validQuarter < 1 || validQuarter > 4) {
+                return {
+                    EC: 400,
+                    EM: "Invalid quarter",
+                    DT: "Quarter must be between 1 and 4"
+                };
+            }
+
+            let startMonth, endMonth;
+            switch (validQuarter) {
+                case 1:
+                    startMonth = 1;
+                    endMonth = 3;
+                    break;
+                case 2:
+                    startMonth = 4;
+                    endMonth = 6;
+                    break;
+                case 3:
+                    startMonth = 7;
+                    endMonth = 9;
+                    break;
+                case 4:
+                    startMonth = 10;
+                    endMonth = 12;
+                    break;
+                default:
+                    return {
+                        EC: 400,
+                        EM: "Invalid quarter value",
+                        DT: "Invalid quarter"
+                    };
+            }
+
+            const startOfQuarter = new Date(`${year}-${startMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+            let nextQuarterMonth = endMonth + 1;
+            let nextYear = year;
+
+            if (nextQuarterMonth === 13) {
+                nextQuarterMonth = 1;
+                nextYear = parseInt(year) + 1;
+            }
+
+            const endOfQuarter = new Date(`${nextYear}-${nextQuarterMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+
+            filter.orderDate = { ...filter.orderDate, $gte: startOfQuarter, $lt: endOfQuarter };
+        }
+
+        // Filter by month (using orderDate)
+        if (month) {
+            const validMonth = parseInt(month);
+            if (isNaN(validMonth) || validMonth < 1 || validMonth > 12) {
+                return {
+                    EC: 400,
+                    EM: "Invalid month",
+                    DT: "Month must be between 1 and 12"
+                };
+            }
+
+            const startOfMonth = new Date(`${year}-${validMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+            let nextMonth = validMonth + 1;
+            let nextYear = year;
+
+            if (nextMonth === 13) {
+                nextMonth = 1;
+                nextYear = parseInt(year) + 1;
+            }
+
+            const endOfMonth = new Date(`${nextYear}-${nextMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+
+            filter.orderDate = { ...filter.orderDate, $gte: startOfMonth, $lt: endOfMonth };
+        }
+
+        // Filter by day (using orderDate)
+        if (day) {
+            const validDay = parseInt(day);
+            if (isNaN(validDay) || validDay < 1 || validDay > 31) {
+                return {
+                    EC: 400,
+                    EM: "Invalid day",
+                    DT: "Day must be between 1 and 31"
+                };
+            }
+
+            const validMonth = parseInt(month);
+            const date = new Date(year, validMonth - 1, validDay);
+
+            if (date.getDate() !== validDay) {
+                return {
+                    EC: 400,
+                    EM: "Invalid date",
+                    DT: `Day ${validDay} does not exist in month ${validMonth}`
+                };
+            }
+
+            const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+            filter.orderDate = { ...filter.orderDate, $gte: startOfDay, $lt: endOfDay };
+        }
+
+        // Retrieve orders with pagination and applied filters
+        orders = await Order.find(filter)
+            .skip((pageNum - 1) * limitNum)  // Pagination: skip records before the current page
+            .limit(limitNum);  // Limit the number of orders returned
+
+        // Calculate total number of orders
+        const totalOrders = await Order.countDocuments(filter); // Count all documents that match the filter
+
+        // If orders are found, fetch order details
+        if (orders && orders.length > 0) {
+            for (let i = 0; i < orders.length; i++) {
+                let orderDetail = [];
+                for (let j = 0; j < orders[i].orderItems.length; j++) {
+                    let orderItem = await OrderItem.findById(orders[i].orderItems[j].toString());
+                    let product = await Product.findById(orderItem.product.toString());
+                    orderDetail.push({ product: product, quantity: orderItem.quantity });
+                }
+                orders[i] = {
+                    ...orders[i]._doc,
+                    orderDetail: orderDetail
+                };
+            }
+            return {
+                EC: 0,
+                EM: "Get All Orders successfully",
+                DT: {
+                    orders: orders,
+                    totalOrders: totalOrders,
+                    page: pageNum,  // Return the current page number
+                    totalPages: Math.ceil(totalOrders / limitNum)  // Calculate total pages
+                }
+            };
+        } else {
+            return {
+                EC: 404,
+                EM: "Orders not found",
+                DT: ""
+            };
+        }
+    } catch (error) {
+        console.error("Error retrieving Orders:", error.message);
+        return {
+            EC: 500,
+            EM: "Error retrieving Orders",
+            DT: error.message
+        };
+    }
+};
+
+
+
+export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders };
