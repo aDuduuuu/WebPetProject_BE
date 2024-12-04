@@ -1,4 +1,4 @@
-import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders } from "../services/orderService.js";
+import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopProduct } from "../services/orderService.js";
 
 // Create Order
 const ccreateOrder = async (req, res) => {
@@ -107,16 +107,70 @@ const cgetOrder = async (req, res) => {
     }
 };
 
+const cgetTopProduct = async (req, res) => {
+    try {
+      // Lấy các tham số year, month, day từ query string
+      const { year, month, day } = req.query;
+  
+      // Kiểm tra xem tham số năm, tháng, ngày có hợp lệ không
+      if (year && isNaN(year)) {
+        return res.status(400).json({
+          EC: 1,
+          EM: "Year must be a valid number",
+          DT: null
+        });
+      }
+  
+      if (month && (isNaN(month) || month < 1 || month > 12)) {
+        return res.status(400).json({
+          EC: 1,
+          EM: "Month must be a valid number between 1 and 12",
+          DT: null
+        });
+      }
+  
+      if (day && (isNaN(day) || day < 1 || day > 31)) {
+        return res.status(400).json({
+          EC: 1,
+          EM: "Day must be a valid number between 1 and 31",
+          DT: null
+        });
+      }
+  
+      // Gọi hàm getTopProduct với các tham số lọc (nếu có)
+      let response = await getTopProduct({
+        year: year ? parseInt(year) : undefined,  // Nếu có year thì chuyển thành số
+        month: month ? month.padStart(2, '0') : undefined,  // Đảm bảo month là 2 chữ số
+        day: day ? day.padStart(2, '0') : undefined,  // Đảm bảo day là 2 chữ số
+      });
+  
+      // Trả về kết quả cho client
+      return res.status(response.EC === 0 ? 200 : 400).json({
+        EC: response.EC,
+        EM: response.EM,
+        DT: response.DT
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({
+        EC: 500,
+        EM: "Error from server",
+        DT: ""
+      });
+    }
+  };
+  
+
 const cgetAllOrders = async (req, res) => {
     try {
-        let { page = 1, limit = 20, year, quarter, month, day } = req.query;
+        let { page = 1, limit = 20, year, quarter, month, day, status } = req.query;
 
         // Convert page and limit to integers
         page = parseInt(page);
         limit = parseInt(limit);
 
         // Call the service function with the proper filters
-        let response = await getAllOrders({ year, quarter, month, day, page, limit });
+        let response = await getAllOrders({ year, quarter, month, day, page, limit, status });
 
         return res.status(response.EC === 0 ? 200 : 400).json({
             EC: response.EC,
@@ -135,4 +189,4 @@ const cgetAllOrders = async (req, res) => {
 
 
 
-export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders };
+export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders, cgetTopProduct as getTopProduct };

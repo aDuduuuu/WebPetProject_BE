@@ -19,6 +19,7 @@ import { favoriteItemRoute } from './src/routes/favoritemRoute.js';
 import { cartItemRoute } from './src/routes/cartItemRoute.js';
 import { orderRoute } from './src/routes/orderRoute.js';
 import { filterRoute } from './src/routes/filterRoute.js';
+import { TProRoute } from './src/routes/topproductRoute.js';
 
 dotenv.config();
 
@@ -45,5 +46,6 @@ favoriteItemRoute(app);
 orderRoute(app);
 cartItemRoute(app);
 filterRoute(app);
+TProRoute(app);
 
 export default app;

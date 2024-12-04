@@ -233,7 +233,7 @@ const getOrder = async (data) => {
 const getAllOrders = async (data) => {
     try {
         let orders;
-        const { year, quarter, month, day, page = 1, limit = 10 } = data;
+        const { year, quarter, month, day, status, page = 1, limit = 10 } = data;
 
         // Ensure that page and limit are valid integers
         const pageNum = Math.max(parseInt(page), 1);  // Default page = 1 if invalid
@@ -278,12 +278,6 @@ const getAllOrders = async (data) => {
                     startMonth = 10;
                     endMonth = 12;
                     break;
-                default:
-                    return {
-                        EC: 400,
-                        EM: "Invalid quarter value",
-                        DT: "Invalid quarter"
-                    };
             }
 
             const startOfQuarter = new Date(`${year}-${startMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
@@ -353,34 +347,76 @@ const getAllOrders = async (data) => {
             filter.orderDate = { ...filter.orderDate, $gte: startOfDay, $lt: endOfDay };
         }
 
+        // Filter by status (using status field)
+        if (status) {
+            const validStatus = status.trim().toLowerCase();
+            // You can adjust this check based on valid statuses in your database
+            const validStatuses = ['cancel', 'shipping', 'waitingship', 'delivered', 'ordered'];
+            if (!validStatuses.includes(validStatus)) {
+                return {
+                    EC: 400,
+                    EM: "Invalid status",
+                    DT: '',
+                };
+            }
+
+            filter.status = validStatus;  // Add the status filter to the query
+        }
+
         // Retrieve orders with pagination and applied filters
         orders = await Order.find(filter)
+            .sort({ orderDate: -1 })
             .skip((pageNum - 1) * limitNum)  // Pagination: skip records before the current page
-            .limit(limitNum);  // Limit the number of orders returned
+            .limit(limitNum)  // Limit the number of orders returned
+            .populate({
+                path: 'orderItems',
+                populate: {
+                    path: 'product',
+                    model: 'Product'
+                }
+            });
 
         // Calculate total number of orders
         const totalOrders = await Order.countDocuments(filter); // Count all documents that match the filter
 
+        // Calculate totalAmount using aggregation
+        const totalAmountResult = await Order.aggregate([
+            { $match: filter },  // Apply the same filter
+            { $group: { _id: null, totalAmount: { $sum: '$totalAmount' } } }
+        ]);
+
+        const totalAmount = totalAmountResult.length > 0 ? totalAmountResult[0].totalAmount : 0;
+
+        // Monthly revenue aggregation
+        const monthlyRevenueResult = await Order.aggregate([
+            { $match: { ...filter, status: 'delivered' } },  // Ensure only "delivered" orders are considered
+            { $project: { 
+                month: { $month: '$orderDate' },  // Extract month from orderDate
+                totalAmount: 1  // Include totalAmount in the projection
+            }},
+            { $group: { 
+                _id: '$month', 
+                revenue: { $sum: '$totalAmount' }
+            }},
+            { $sort: { _id: 1 } }  // Sort by month
+        ]);
+
+        // Create an array of revenue for each month (from 1 to 12)
+        const monthlyRevenue = Array.from({ length: 12 }, (_, i) => {
+            const monthData = monthlyRevenueResult.find(m => m._id === (i + 1));
+            return monthData ? monthData.revenue : 0;
+        });
+
         // If orders are found, fetch order details
         if (orders && orders.length > 0) {
-            for (let i = 0; i < orders.length; i++) {
-                let orderDetail = [];
-                for (let j = 0; j < orders[i].orderItems.length; j++) {
-                    let orderItem = await OrderItem.findById(orders[i].orderItems[j].toString());
-                    let product = await Product.findById(orderItem.product.toString());
-                    orderDetail.push({ product: product, quantity: orderItem.quantity });
-                }
-                orders[i] = {
-                    ...orders[i]._doc,
-                    orderDetail: orderDetail
-                };
-            }
             return {
                 EC: 0,
                 EM: "Get All Orders successfully",
                 DT: {
                     orders: orders,
                     totalOrders: totalOrders,
+                    totalAmount: totalAmount,  // Return totalAmount from aggregation
+                    monthlyRevenue: monthlyRevenue,  // Return the monthly revenue data
                     page: pageNum,  // Return the current page number
                     totalPages: Math.ceil(totalOrders / limitNum)  // Calculate total pages
                 }
@@ -403,5 +439,125 @@ const getAllOrders = async (data) => {
 };
 
 
+const getTopProduct = async ({ year, month, day }) => {
+    try {
+      // Xây dựng điều kiện lọc cho orderDate
+      let dateFilter = {};
+  
+      if (year) {
+        // Lọc theo năm
+        const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+        const endOfYear = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
+        dateFilter.orderDate = { $gte: startOfYear, $lt: endOfYear };
+      }
+  
+      // Filter by month (using orderDate)
+if (month) {
+    const validMonth = parseInt(month);
+    if (isNaN(validMonth) || validMonth < 1 || validMonth > 12) {
+        return {
+            EC: 400,
+            EM: "Invalid month",
+            DT: "Month must be between 1 and 12"
+        };
+    }
 
-export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders };
+    const startOfMonth = new Date(`${year}-${validMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+    let nextMonth = validMonth + 1;  // Next month is the next integer month value
+
+    let nextYear = year;  // Default is the same year
+
+    if (nextMonth === 13) {  // Special case for December
+        nextMonth = 1;  // Reset to January
+        nextYear = parseInt(year) + 1;  // Increment the year
+    }
+
+    const endOfMonth = new Date(`${nextYear}-${nextMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+
+    dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfMonth, $lt: endOfMonth };
+}
+
+  
+      if (day) {
+        // Lọc theo năm, tháng và ngày
+        const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+        const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+        const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+        dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfDay, $lt: endOfDay };
+      }
+  
+      // Bắt đầu pipeline aggregation
+      const result = await Order.aggregate([
+        // Lọc đơn hàng theo orderDate nếu có điều kiện
+        { $match: dateFilter },
+  
+        // Lấy thông tin các OrderItem và nhóm theo sản phẩm
+        { $unwind: "$orderItems" },
+        {
+          $lookup: {
+            from: "orderitems",  // Bảng OrderItem
+            localField: "orderItems",
+            foreignField: "_id",
+            as: "orderItemDetails",
+          }
+        },
+        { $unwind: "$orderItemDetails" },  // Làm phẳng mảng orderItemDetails
+  
+        // Nhóm lại theo sản phẩm và tính tổng số lượng bán ra
+        {
+          $group: {
+            _id: "$orderItemDetails.product",  // Nhóm theo sản phẩm
+            totalQuantity: { $sum: "$orderItemDetails.quantity" }  // Tính tổng số lượng bán
+          }
+        },
+        
+        // Sắp xếp các sản phẩm theo số lượng bán được (giảm dần)
+        { $sort: { totalQuantity: -1 } },
+  
+        // Giới hạn kết quả lấy 4 sản phẩm bán chạy nhất
+        { $limit: 4 },
+  
+        // Lookup để lấy thêm thông tin sản phẩm
+        {
+          $lookup: {
+            from: "products",  // Bảng Product
+            localField: "_id",  // Trường _id trong nhóm sẽ khớp với product._id
+            foreignField: "_id",
+            as: "productDetails",
+          }
+        },
+  
+        // Làm phẳng mảng productDetails để lấy thông tin chi tiết sản phẩm
+        { $unwind: "$productDetails" },
+  
+        // Trả về kết quả
+        {
+          $project: {
+            _id: 0,
+            productId: "$_id",
+            totalQuantity: 1,
+            productName: "$productDetails.name",
+            productPrice: "$productDetails.price",
+            productImage: "$productDetails.image",
+          }
+        }
+      ]);
+  
+      return {
+        EC: 0,
+        EM: "Get Top Products successfully",
+        DT: result,
+      };
+  
+    } catch (error) {
+      console.error("Error in getTopProduct:", error.message);
+      return {
+        EC: 500,
+        EM: "Error from server",
+        DT: error.message,
+      };
+    }
+  };
+  
+
+export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct };
