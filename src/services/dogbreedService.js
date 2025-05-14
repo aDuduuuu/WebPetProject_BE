@@ -165,6 +165,33 @@ const searchDogBreeds = async (filters, page = 1, limit) => {
   }
 };
 
+const searchDogBreedsByName = async (keyword, page = 1, limit = 10) => {
+  try {
+    const regex = new RegExp(keyword, "i"); // i = case-insensitive
+    const skip = (page - 1) * limit;
+
+    const totalBreeds = await DogBreed.countDocuments({ name: regex });
+    const dogBreeds = await DogBreed.find({ name: regex })
+      .limit(limit)
+      .skip(skip)
+      .select("name description");
+
+    return {
+      EC: 0,
+      EM: dogBreeds.length ? "Dog breeds found by name" : "No dog breeds matched the name",
+      DT: dogBreeds,
+      totalBreeds,
+    };
+  } catch (error) {
+    console.error("Error searching dog breeds by name:", error);
+    return {
+      EC: 500,
+      EM: "Error searching dog breeds",
+      DT: error.message,
+    };
+  }
+};
+
 // Get Dog Breed Details by Name
 const getDogBreedDetailsByName = async (name) => {
   try {

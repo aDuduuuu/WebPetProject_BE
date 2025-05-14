@@ -142,6 +142,9 @@ const searchDogBreedsController = async (req, res) => {
 
     // Tạo bộ lọc từ các query parameters
     const filters = {};
+    if (req.query.name) {
+      filters.name = { $regex: req.query.name, $options: "i" }; // tìm kiếm không phân biệt hoa thường
+    }
     if (req.query.group) filters.group = req.query.group;
     if (req.query.activityLevel) filters.activityLevel = req.query.activityLevel;
     if (req.query.barkingLevelDescription) filters.barkingLevelDescription = req.query.barkingLevelDescription;
