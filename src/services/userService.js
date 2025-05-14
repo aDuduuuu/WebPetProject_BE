@@ -72,7 +72,17 @@ const sendVerificationEmail = async (userEmail, token) => {
       from: process.env.EMAIL_USER,
       to: userEmail,
       subject: 'Verify your account',
-      text: `Click the following link to authenticate your account: ${verificationLink}`
+      text: `Click the following link to authenticate your account: ${verificationLink}`,
+      html: `
+          <div style="font-family: Arial, sans-serif; padding: 10px;">
+            <h2 style="color: #333;">🔒 Email Verification</h2>
+            <p>Thank you for registering. Please click the link below to verify your account:</p>
+            <a href="${verificationLink}" target="_blank" style="display: inline-block; padding: 10px 15px; background-color: #007BFF; color: white; text-decoration: none; border-radius: 5px;">
+              Verify My Email
+            </a>
+            <p>If you did not request this, please ignore this email.</p>
+          </div>
+        `
     };
 
     await transporter.sendMail(mailOptions);
