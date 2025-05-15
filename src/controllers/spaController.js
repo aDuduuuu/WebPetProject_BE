@@ -1,12 +1,17 @@
-import { createSpa, updateSpa, deleteSpa, getSpa, getUniqueServices } from "../services/spaService.js";
+import {
+  createSpa,
+  updateSpa,
+  deleteSpa,
+  getSpa,
+  getUniqueServices,
+  searchSpaByName,
+} from "../services/spaService.js";
 
 // Create Spa
 const createSpaController = async (req, res) => {
   try {
-    // Lấy dữ liệu từ body của yêu cầu
-    let data = req.body;
+    const data = req.body;
 
-    // Kiểm tra tính hợp lệ của dữ liệu đầu vào
     if (!data || !data.name || !data.image || !data.location || !data.services || !data.contactInfo || !data.description) {
       return res.status(400).json({
         EC: 400,
@@ -15,10 +20,7 @@ const createSpaController = async (req, res) => {
       });
     }
 
-    // Gọi hàm tạo Spa từ service
-    let response = await createSpa(data);
-
-    // Trả về phản hồi với mã trạng thái 200 nếu thành công
+    const response = await createSpa(data);
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
@@ -26,7 +28,6 @@ const createSpaController = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating Spa:", error.message);
-
     return res.status(500).json({
       EC: 500,
       EM: "Internal Server Error: " + error.message,
@@ -38,8 +39,8 @@ const createSpaController = async (req, res) => {
 // Update Spa
 const updateSpaController = async (req, res) => {
   try {
-    let id = req.params.id;
-    let data = req.body;
+    const id = req.params.id;
+    const data = req.body;
 
     if (!id || !data) {
       return res.status(400).json({
@@ -49,7 +50,7 @@ const updateSpaController = async (req, res) => {
       });
     }
 
-    let response = await updateSpa(id, data);
+    const response = await updateSpa(id, data);
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
@@ -68,7 +69,7 @@ const updateSpaController = async (req, res) => {
 // Delete Spa
 const deleteSpaController = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = req.params.id;
     if (!id) {
       return res.status(400).json({
         EC: 400,
@@ -77,7 +78,7 @@ const deleteSpaController = async (req, res) => {
       });
     }
 
-    let response = await deleteSpa(id);
+    const response = await deleteSpa(id);
     return res.status(response.EC === 0 ? 200 : 400).json({
       EC: response.EC,
       EM: response.EM,
@@ -93,25 +94,24 @@ const deleteSpaController = async (req, res) => {
   }
 };
 
-// Get Spa (by id or all spas)
+// Get Spa (by id or list with filters + pagination)
 const getSpaController = async (req, res) => {
   try {
-    let id = req.params.id;
-    let page = req.query.page || 1;
-    let limit = req.query.limit || 20;
+    const id = req.params.id;
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 20;
 
-    // Lấy bộ lọc từ query
     const filters = {
       location: req.query.location,
-      services: req.query.services ? req.query.services.split(',') : [] // Tách chuỗi services thành mảng
+      services: req.query.services ? req.query.services.split(",") : []
     };
 
-    let response = await getSpa(id, page, limit, filters);
-
+    const response = await getSpa(id, page, limit, filters);
     return res.status(response.EC === 0 ? 200 : 404).json({
       EC: response.EC,
       EM: response.EM,
-      DT: response.DT
+      DT: response.DT,
+      totalSpas: response.totalSpas || 0
     });
   } catch (error) {
     console.error("Error getting Spa:", error.message);
@@ -123,6 +123,32 @@ const getSpaController = async (req, res) => {
   }
 };
 
+// Search Spa by name
+const searchSpaByNameController = async (req, res) => {
+  try {
+    const keyword = req.query.keyword || "";
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+
+    const response = await searchSpaByName(keyword, page, limit);
+
+    return res.status(response.EC === 0 ? 200 : 400).json({
+      EC: response.EC,
+      EM: response.EM,
+      DT: response.DT,
+      totalSpas: response.totalSpas || 0
+    });
+  } catch (error) {
+    console.error("Error searching Spa by name:", error.message);
+    return res.status(500).json({
+      EC: 500,
+      EM: "Internal Server Error: " + error.message,
+      DT: ""
+    });
+  }
+};
+
+// Get unique services
 const getServicesController = async (req, res) => {
   try {
     const response = await getUniqueServices();
@@ -146,5 +172,6 @@ export {
   updateSpaController as updateSpa,
   deleteSpaController as deleteSpa,
   getSpaController as getSpa,
+  searchSpaByNameController as searchSpaByName,
   getServicesController as getServices,
 };

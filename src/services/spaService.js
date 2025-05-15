@@ -105,27 +105,22 @@ const getSpa = async (id, page = 1, limit = 20, filters = {}) => {
         query["services"] = { $in: filters.services };
       }
 
-      // Tính toán số lượng Spa cần bỏ qua
+      // Phân trang
       limit = parseInt(limit) || 20;
       page = parseInt(page) || 1;
-      let skip = (page - 1) * limit;
+      const skip = (page - 1) * limit;
 
-      // Lấy tất cả Spa với phân trang và bộ lọc
-      let spas = await Spa.find(query).limit(limit).skip(skip);
+      // Đếm tổng số Spa thỏa bộ lọc
+      const totalSpas = await Spa.countDocuments(query);
 
-      // Kiểm tra nếu không có Spa nào
-      if (!spas || spas.length === 0) {
-        return {
-          EC: 404,
-          EM: "No Spas found",
-          DT: "",
-        };
-      }
+      // Lấy dữ liệu phân trang
+      const spas = await Spa.find(query).limit(limit).skip(skip);
 
       return {
         EC: 0,
-        EM: "All Spas retrieved successfully",
+        EM: spas.length ? "All Spas retrieved successfully" : "No Spas found",
         DT: spas,
+        totalSpas,
       };
     }
   } catch (error) {
@@ -137,6 +132,39 @@ const getSpa = async (id, page = 1, limit = 20, filters = {}) => {
     };
   }
 };
+
+// Search Spa by name (with pagination and case-insensitive)
+const searchSpaByName = async (keyword, page = 1, limit = 10) => {
+  try {
+    const regex = new RegExp(keyword, "i"); // i = case-insensitive
+    const skip = (page - 1) * limit;
+
+    // Đếm tổng số Spa phù hợp
+    const totalSpas = await Spa.countDocuments({ name: regex });
+
+    // Tìm danh sách Spa phù hợp, chỉ lấy trường name và location
+    const spas = await Spa.find({ name: regex })
+      .limit(limit)
+      .skip(skip)
+      .select("name location image services"); // chọn các trường cần hiển thị
+
+    return {
+      EC: 0,
+      EM: spas.length ? "Spa(s) found by name" : "No Spa matched the name",
+      DT: spas,
+      totalSpas,
+    };
+  } catch (error) {
+    console.error("Error searching Spa by name:", error);
+    return {
+      EC: 500,
+      EM: "Error searching Spa",
+      DT: error.message,
+    };
+  }
+};
+
+
 
 const getUniqueServices = async () => {
   try {
@@ -156,4 +184,4 @@ const getUniqueServices = async () => {
   }
 };
 
-export { createSpa, deleteSpa, updateSpa, getSpa, getUniqueServices };
+export { createSpa, deleteSpa, updateSpa, getSpa, getUniqueServices, searchSpaByName, };
