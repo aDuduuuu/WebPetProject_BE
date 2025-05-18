@@ -1,4 +1,4 @@
-import { createProduct, deleteProduct, updateProduct, getProduct} from "../controllers/productController.js";
+import { createProduct, deleteProduct, updateProduct, getProduct, searchProductByName} from "../controllers/productController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -10,6 +10,7 @@ let initProductRoute = (app) => {
     router.get("/products/:id?", getProduct); // Get a product by ID, productCode, or all products
     router.patch("/products/:id", updateProduct); // Update a product by ID or productCode
     router.delete("/products/:id", deleteProduct); // Delete a product by ID or productCode
+    router.get("/products/search/by-name", searchProductByName); // ✅ Search product by name
 
     return app.use("/api/", router);
 };

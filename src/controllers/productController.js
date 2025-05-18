@@ -1,4 +1,4 @@
-import { createProduct, deleteProduct, updateProduct, getProduct } from "../services/productService.js";
+import { createProduct, deleteProduct, updateProduct, getProduct, searchProductByName, } from "../services/productService.js";
 
 // Create Product
 const ccreateProduct = async (req, res) => {
@@ -95,7 +95,6 @@ const cgetProduct = async (req, res) => {
         let page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 20;
 
-        // Lấy bộ lọc từ query
         const filters = {
             Type: req.query.Type,
             minPrice: req.query.minPrice ? parseFloat(req.query.minPrice) : undefined,
@@ -104,21 +103,47 @@ const cgetProduct = async (req, res) => {
 
         const sortBy = req.query.sortBy || '';
 
-        let response = await getProduct(id, useProductCode, page, limit, filters, sortBy);
+        const response = await getProduct(id, useProductCode, page, limit, filters, sortBy);
 
         return res.status(response.EC === 200 ? 200 : 404).json({
             EC: response.EC,
             EM: response.EM,
-            DT: response.DT
+            DT: response.DT,
+            totalProducts: response.totalProducts || 0,
         });
     } catch (error) {
         console.log("Error in cgetProduct:", error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
-            DT: ""
+            DT: "",
         });
     }
 };
 
-export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct};
+// Search Product by name (paginated)
+const csearchProductByName = async (req, res) => {
+    try {
+        const keyword = req.query.keyword || "";
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const response = await searchProductByName(keyword, page, limit);
+        return res.status(response.EC === 200 ? 200 : 400).json({
+            EC: response.EC,
+            EM: response.EM,
+            DT: response.DT,
+            totalProducts: response.totalProducts || 0,
+        });
+    } catch (error) {
+        console.error("Error searching product by name:", error.message);
+        return res.status(500).json({
+            EC: 500,
+            EM: "Internal Server Error: " + error.message,
+            DT: "",
+        });
+    }
+};
+
+
+export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct, csearchProductByName as searchProductByName};
