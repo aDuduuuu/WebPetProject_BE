@@ -1,4 +1,4 @@
-import { createDogSeller, updateDogSeller, deleteDogSeller, getDogSeller, getUniqueBreed } from "../services/dogsellerService.js";
+import { createDogSeller, updateDogSeller, deleteDogSeller, getDogSeller, getUniqueBreed, searchDogSellerByName } from "../services/dogsellerService.js";
 
 // Create Dog Seller
 const ccreateDogSeller = async (req, res) => {
@@ -94,10 +94,9 @@ const cgetDogSeller = async (req, res) => {
         let page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 20;
 
-        // Lấy bộ lọc từ query, chuyển đổi `breed` thành mảng nếu có nhiều giá trị
         const filters = {
             location: req.query.location,
-            breed: req.query.breed ? req.query.breed.split(',') : [] // Tách chuỗi breed thành mảng
+            breed: req.query.breed ? req.query.breed.split(',') : []
         };
 
         let response = await getDogSeller(id, useSellerID, page, limit, filters);
@@ -105,7 +104,8 @@ const cgetDogSeller = async (req, res) => {
         return res.status(response.EC === 200 ? 200 : 404).json({
             EC: response.EC,
             EM: response.EM,
-            DT: response.DT
+            DT: response.DT,
+            totalDogSellers: response.totalDogSellers || 0
         });
     } catch (error) {
         console.log("Error in cgetDogSeller:", error);
@@ -135,10 +135,34 @@ const getBreedsController = async (req, res) => {
     }
   };
 
+  const searchDogSellerByNameController = async (req, res) => {
+    try {
+        const keyword = req.query.keyword || "";
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const response = await searchDogSellerByName(keyword, page, limit);
+        return res.status(response.EC === 0 ? 200 : 400).json({
+            EC: response.EC,
+            EM: response.EM,
+            DT: response.DT,
+            totalDogSellers: response.totalDogSellers || 0,
+        });
+    } catch (error) {
+        console.error("Error searching Dog Seller by name:", error.message);
+        return res.status(500).json({
+            EC: 500,
+            EM: "Internal Server Error: " + error.message,
+            DT: "",
+        });
+    }
+};
+
 export {
     ccreateDogSeller as createDogSeller,
     cupdateDogSeller as updateDogSeller,
     cdeleteDogSeller as deleteDogSeller,
     cgetDogSeller as getDogSeller,
-    getBreedsController
+    getBreedsController,
+    searchDogSellerByNameController as searchDogSellerByName
 };

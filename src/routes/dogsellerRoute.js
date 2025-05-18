@@ -1,4 +1,4 @@
-import { createDogSeller, deleteDogSeller, updateDogSeller, getDogSeller } from "../controllers/dogsellerController.js";
+import { createDogSeller, deleteDogSeller, updateDogSeller, getDogSeller, searchDogSellerByName } from "../controllers/dogsellerController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -10,6 +10,7 @@ let initDogSellerRoute = (app) => {
     router.get("/dogsellers/:id?", getDogSeller); // Get Dog Seller by ID
     router.patch("/dogsellers/:id", updateDogSeller); // Update Dog Seller by ID
     router.delete("/dogsellers/:id", deleteDogSeller); // Delete Dog Seller by ID
+    router.get("/dogsellers/search/by-name", searchDogSellerByName);
 
     return app.use("/api/", router);
 };
