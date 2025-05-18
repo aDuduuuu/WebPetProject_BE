@@ -74,22 +74,22 @@ const updateTrainer = async (id, data) => {
   }
 };
 
-// Get Trainer (by id or all trainers)
+// Get Trainer (by id or all trainers with filters + pagination)
 const getTrainer = async (id, page = 1, limit = 20, filters = {}) => {
   try {
     if (id) {
-      let trainer = await Trainer.findById(id);
+      const trainer = await Trainer.findById(id);
       if (!trainer) {
         return {
           EC: 404,
           EM: "Trainer not found",
-          DT: ""
+          DT: "",
         };
       }
       return {
         EC: 0,
         EM: "Trainer retrieved successfully",
-        DT: trainer
+        DT: trainer,
       };
     } else {
       const query = {};
@@ -102,23 +102,18 @@ const getTrainer = async (id, page = 1, limit = 20, filters = {}) => {
         query["services"] = { $in: filters.services };
       }
 
-      limit = parseInt(limit);
-      page = parseInt(page);
+      limit = parseInt(limit) || 20;
+      page = parseInt(page) || 1;
       const skip = (page - 1) * limit;
 
-      let trainers = await Trainer.find(query).limit(limit).skip(skip);
-      if (!trainers || trainers.length === 0) {
-        return {
-          EC: 404,
-          EM: "No trainers found",
-          DT: ""
-        };
-      }
+      const totalTrainers = await Trainer.countDocuments(query);
+      const trainers = await Trainer.find(query).limit(limit).skip(skip);
 
       return {
         EC: 0,
-        EM: "Trainers retrieved successfully",
-        DT: trainers
+        EM: trainers.length ? "Trainers retrieved successfully" : "No trainers found",
+        DT: trainers,
+        totalTrainers,
       };
     }
   } catch (error) {
@@ -126,10 +121,11 @@ const getTrainer = async (id, page = 1, limit = 20, filters = {}) => {
     return {
       EC: 500,
       EM: "Error retrieving Trainer",
-      DT: error.message
+      DT: error.message,
     };
   }
 };
+
 
 const getUniqueServices = async () => {
   try {
@@ -149,4 +145,36 @@ const getUniqueServices = async () => {
   }
 };
 
-export { createTrainer, deleteTrainer, updateTrainer, getTrainer, getUniqueServices };
+// Search Trainer by name (with pagination and case-insensitive)
+const searchTrainerByName = async (keyword, page = 1, limit = 10) => {
+  try {
+    const regex = new RegExp(keyword, "i"); // case-insensitive
+    const skip = (page - 1) * limit;
+
+    // Đếm số trainer phù hợp
+    const totalTrainers = await Trainer.countDocuments({ name: regex });
+
+    // Tìm trainer khớp tên (chỉ lấy một số trường cần thiết nếu muốn)
+    const trainers = await Trainer.find({ name: regex })
+      .limit(limit)
+      .skip(skip)
+      .select("name location image services"); // tùy chọn trường trả về
+
+    return {
+      EC: 0,
+      EM: trainers.length ? "Trainer(s) found by name" : "No Trainer matched the name",
+      DT: trainers,
+      totalTrainers,
+    };
+  } catch (error) {
+    console.error("Error searching Trainer by name:", error.message);
+    return {
+      EC: 500,
+      EM: "Error searching Trainer",
+      DT: error.message,
+    };
+  }
+};
+
+
+export { createTrainer, deleteTrainer, updateTrainer, getTrainer, getUniqueServices, searchTrainerByName };

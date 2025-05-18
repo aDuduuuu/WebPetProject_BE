@@ -1,4 +1,4 @@
-import { createTrainer, deleteTrainer, updateTrainer, getTrainer } from "../controllers/trainerController.js";
+import { createTrainer, deleteTrainer, updateTrainer, getTrainer, searchTrainerByName } from "../controllers/trainerController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 
@@ -6,15 +6,16 @@ dotenv.config();
 
 const router = express.Router();
 
+// Sửa lại: thêm tiền tố /trainers trước các route
 const initTrainerRoute = (app) => {
-  // Định nghĩa các route liên quan đến Trainer
-  router.post("/trainers", createTrainer); // Tạo mới Trainer
-  router.get("/trainers/:id?", getTrainer); // Lấy thông tin Trainer (theo ID hoặc tất cả nếu không có ID)
-  router.patch("/trainers/:id", updateTrainer); // Cập nhật Trainer theo ID
-  router.delete("/trainers/:id", deleteTrainer); // Xóa Trainer theo ID
+  router.post("/", createTrainer);
+  router.get("/:id?", getTrainer);
+  router.patch("/:id", updateTrainer);
+  router.delete("/:id", deleteTrainer);
+  router.get("/search/by-name", searchTrainerByName); // vẫn giữ nguyên
 
-  // Sử dụng router với tiền tố /api
-  return app.use("/api", router);
+  return app.use("/api/trainers", router); // ✅ Thay đổi ở đây
 };
+
 
 export { initTrainerRoute as trainerRoute };

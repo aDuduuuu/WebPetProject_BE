@@ -1,4 +1,4 @@
-import { createTrainer, updateTrainer, deleteTrainer, getTrainer, getUniqueServices } from "../services/trainerService.js";
+import { createTrainer, updateTrainer, deleteTrainer, getTrainer, getUniqueServices, searchTrainerByName } from "../services/trainerService.js";
 
 // Create Trainer
 const createTrainerController = async (req, res) => {
@@ -85,33 +85,34 @@ const deleteTrainerController = async (req, res) => {
   }
 };
 
-// Get Trainer (by id or all trainers)
 const getTrainerController = async (req, res) => {
   try {
-    let id = req.params.id;
-    let page = req.query.page || 1;
-    let limit = req.query.limit || 20;
+    const id = req.params.id;
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 20;
 
     const filters = {
       location: req.query.location,
-      services: req.query.services ? req.query.services.split(",") : []
+      services: req.query.services ? req.query.services.split(",") : [],
     };
 
-    let response = await getTrainer(id, page, limit, filters);
+    const response = await getTrainer(id, page, limit, filters);
     return res.status(response.EC === 0 ? 200 : 404).json({
       EC: response.EC,
       EM: response.EM,
-      DT: response.DT
+      DT: response.DT,
+      totalTrainers: response.totalTrainers || 0,
     });
   } catch (error) {
     console.error("Error getting Trainer:", error.message);
     return res.status(500).json({
       EC: 500,
       EM: "Internal Server Error: " + error.message,
-      DT: ""
+      DT: "",
     });
   }
 };
+
 
 const getServicesController = async (req, res) => {
   try {
@@ -130,11 +131,35 @@ const getServicesController = async (req, res) => {
     });
   }
 };
+const searchTrainerByNameController = async (req, res) => {
+  try {
+    const keyword = req.query.keyword || "";
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+
+    const response = await searchTrainerByName(keyword, page, limit);
+    return res.status(response.EC === 0 ? 200 : 400).json({
+      EC: response.EC,
+      EM: response.EM,
+      DT: response.DT,
+      totalTrainers: response.totalTrainers || 0,
+    });
+  } catch (error) {
+    console.error("Error searching Trainer by name:", error.message);
+    return res.status(500).json({
+      EC: 500,
+      EM: "Internal Server Error: " + error.message,
+      DT: "",
+    });
+  }
+};
+
 
 export {
   createTrainerController as createTrainer,
   updateTrainerController as updateTrainer,
   deleteTrainerController as deleteTrainer,
   getTrainerController as getTrainer,
-  getServicesController as getCServices
+  getServicesController as getCServices,
+  searchTrainerByNameController as searchTrainerByName,
 };
