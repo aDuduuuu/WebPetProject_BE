@@ -96,48 +96,73 @@ const getPost = async (id, usePostID = false, page = 1, limit = 20, filters = {}
     try {
         let query = {};
 
-        // Nếu có `id` hoặc `postID`, lấy bài đăng cụ thể
         if (id) {
-            if (usePostID) {
-                const post = await Post.findOne({ postID: id });
-                if (!post) {
-                    return { EC: 404, EM: "Post not found", DT: "" };
-                }
-                return { EC: 200, EM: "Post retrieved successfully", DT: post };
-            } else {
-                const post = await Post.findById(id);
-                if (!post) {
-                    return { EC: 404, EM: "Post not found", DT: "" };
-                }
-                return { EC: 200, EM: "Post retrieved successfully", DT: post };
+            const post = usePostID
+                ? await Post.findOne({ postID: id })
+                : await Post.findById(id);
+            if (!post) {
+                return { EC: 404, EM: "Post not found", DT: "" };
             }
+            return { EC: 200, EM: "Post retrieved successfully", DT: post };
         }
 
-        // Nếu không có id, áp dụng bộ lọc và sắp xếp cho danh sách bài đăng
+        // Bộ lọc
         if (filters.category) {
             query.category = filters.category;
         }
 
         limit = parseInt(limit) || 20;
         page = parseInt(page) || 1;
-        let skip = (page - 1) * limit;
+        const skip = (page - 1) * limit;
 
+        // Sắp xếp
         let sortOption = {};
         if (sortBy === 'time') sortOption.datePosted = -1;
         if (sortBy === 'otime') sortOption.datePosted = 1;
 
+        const totalPosts = await Post.countDocuments(query);
         const posts = await Post.find(query).limit(limit).skip(skip).sort(sortOption);
 
-        if (!posts || posts.length === 0) {
-            return { EC: 404, EM: "No posts found", DT: [] };
-        }
-
-        return { EC: 200, EM: "Posts retrieved successfully", DT: posts };
+        return {
+            EC: 200,
+            EM: posts.length ? "Posts retrieved successfully" : "No posts found",
+            DT: posts,
+            totalPosts
+        };
     } catch (error) {
         console.error("Error retrieving posts:", error);
         return { EC: 500, EM: "Error from server", DT: "" };
     }
 };
+
+// Search Post by title (case-insensitive, with pagination)
+const searchPostByTitle = async (keyword, page = 1, limit = 10) => {
+    try {
+      const regex = new RegExp(keyword, "i"); // Tìm kiếm không phân biệt hoa thường
+      const skip = (page - 1) * limit;
+  
+      const totalPosts = await Post.countDocuments({ title: regex });
+  
+      const posts = await Post.find({ title: regex })
+        .limit(limit)
+        .skip(skip)
+        .select("title image sdescription author postID category"); // Chọn trường cần thiết
+  
+      return {
+        EC: 200,
+        EM: posts.length ? "Posts found by title" : "No posts matched the title",
+        DT: posts,
+        totalPosts,
+      };
+    } catch (error) {
+      console.error("Error searching Post by title:", error.message);
+      return {
+        EC: 500,
+        EM: "Error searching Post",
+        DT: error.message,
+      };
+    }
+  };  
 
 const getPostCategories = async () => {
     try {
@@ -150,4 +175,4 @@ const getPostCategories = async () => {
   };
   
 
-export { createPost, deletePost, updatePost, getPost, getPostCategories };
+export { createPost, deletePost, updatePost, getPost, getPostCategories, searchPostByTitle, };

@@ -1,4 +1,4 @@
-import { createPost, deletePost, updatePost, getPost } from "../controllers/postController.js";
+import { createPost, deletePost, updatePost, getPost, searchPostByTitle, } from "../controllers/postController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -10,6 +10,7 @@ let initPostRoute = (app) => {
     router.get("/posts/:id?", getPost);
     router.patch("/posts/:id", updatePost);
     router.delete("/posts/:id", deletePost);
+    router.get("/posts/search/by-title", searchPostByTitle);
 
     return app.use("/api/", router);
 };

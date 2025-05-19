@@ -1,4 +1,4 @@
-import { createPost, updatePost, deletePost, getPost, getPostCategories } from "../services/postService.js";
+import { createPost, updatePost, deletePost, getPost, getPostCategories, searchPostByTitle, } from "../services/postService.js";
 
 // Create Post
 const ccreatePost = async (req, res) => {
@@ -107,7 +107,8 @@ const cgetPost = async (req, res) => {
         return res.status(response.EC === 200 ? 200 : 404).json({
             EC: response.EC,
             EM: response.EM,
-            DT: response.DT
+            DT: response.DT,
+            totalPosts: response.totalPosts || 0, // thêm tổng số bài viết nếu có
         });
     } catch (error) {
         console.log("Error in cgetPost:", error);
@@ -118,6 +119,7 @@ const cgetPost = async (req, res) => {
         });
     }
 };
+
 
 const getAllPostCategories = async (req, res) => {
     try {
@@ -143,6 +145,30 @@ const getAllPostCategories = async (req, res) => {
         DT: "",
       });
     }
-  };
+};
 
-export { ccreatePost as createPost, cupdatePost as updatePost, cdeletePost as deletePost, cgetPost as getPost, getAllPostCategories };
+// Search Post by title (with pagination)
+const searchPostByTitleController = async (req, res) => {
+    try {
+      const keyword = req.query.keyword || "";
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+  
+      const response = await searchPostByTitle(keyword, page, limit);
+      return res.status(response.EC === 200 ? 200 : 404).json({
+        EC: response.EC,
+        EM: response.EM,
+        DT: response.DT,
+        totalPosts: response.totalPosts || 0,
+      });
+    } catch (error) {
+      console.error("Error searching Post by title:", error.message);
+      return res.status(500).json({
+        EC: 500,
+        EM: "Internal Server Error: " + error.message,
+        DT: "",
+      });
+    }
+};
+
+export { ccreatePost as createPost, cupdatePost as updatePost, cdeletePost as deletePost, cgetPost as getPost, getAllPostCategories, searchPostByTitleController as searchPostByTitle, };
