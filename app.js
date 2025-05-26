@@ -20,6 +20,7 @@ import { cartItemRoute } from './src/routes/cartItemRoute.js';
 import { orderRoute } from './src/routes/orderRoute.js';
 import { filterRoute } from './src/routes/filterRoute.js';
 import { TProRoute } from './src/routes/topproductRoute.js';
+import { dogFoodRoute } from './src/routes/dogfoodRoute.js';
 
 
 dotenv.config();
@@ -48,5 +49,6 @@ orderRoute(app);
 cartItemRoute(app);
 filterRoute(app);
 TProRoute(app);
+dogFoodRoute(app);
 
 export default app;
