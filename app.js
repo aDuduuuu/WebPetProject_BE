@@ -21,6 +21,7 @@ import { orderRoute } from './src/routes/orderRoute.js';
 import { filterRoute } from './src/routes/filterRoute.js';
 import { TProRoute } from './src/routes/topproductRoute.js';
 
+
 dotenv.config();
 
 connectDB();
@@ -32,7 +33,7 @@ app.use(cors());
 app.use(express.json());
 
 // Định nghĩa các route
-authRoute(app); 
+authRoute(app);
 userRoute(app);
 spaRoute(app);
 postRoute(app);

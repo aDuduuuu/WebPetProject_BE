@@ -2,11 +2,10 @@ import CartItem from "../models/cartitem.js";
 import Cart from "../models/cart.js";
 import Product from "../models/product.js";
 
-// Create CartItem
 const createCartItem = async (data) => {
     try {
-        // Kiểm tra xem Product đã tồn tại chưa
-        let product = await Product.findById(data.product);
+        // Kiểm tra xem Product có tồn tại không
+        const product = await Product.findById(data.product);
         if (!product) {
             return {
                 EC: 404,
@@ -15,18 +14,27 @@ const createCartItem = async (data) => {
             };
         }
 
-        // Kiểm tra xem Cart đã tồn tại chưa
+        // Kiểm tra giỏ hàng của người dùng
         let cart = await Cart.findOne({ userID: data.userID });
+
+        // Nếu chưa có giỏ hàng, tạo mới
         if (!cart) {
+            // Giới hạn số lượng không vượt quá kho
             if (data.quantity > product.quantity) {
                 data.quantity = product.quantity;
             }
-            let cartItemNew = await CartItem.create({
+
+            const cartItemNew = await CartItem.create({
                 product: data.product,
                 quantity: +data.quantity
             });
+
             if (cartItemNew) {
-                let cartNew = await Cart.create({ userID: data.userID, items: [cartItemNew._id] });
+                const cartNew = await Cart.create({
+                    userID: data.userID,
+                    items: [cartItemNew._id]
+                });
+
                 if (cartNew) {
                     return {
                         EC: 0,
@@ -36,13 +44,39 @@ const createCartItem = async (data) => {
                 }
             }
         } else {
+            // Dọn dẹp các CartItem null (nếu có)
+            let validItemIDs = [];
             for (let i = 0; i < cart.items.length; i++) {
-                let cartItem = await CartItem.findById(cart.items[i].toString());
+                const cartItem = await CartItem.findById(cart.items[i]);
+                if (cartItem) {
+                    validItemIDs.push(cartItem._id);
+                }
+            }
+
+            // Nếu có sự khác biệt => cập nhật lại giỏ hàng
+            if (validItemIDs.length !== cart.items.length) {
+                await Cart.findByIdAndUpdate(cart._id, { items: validItemIDs });
+                cart.items = validItemIDs; // Cập nhật lại trong biến `cart`
+            }
+
+            // Kiểm tra sản phẩm đã có trong giỏ chưa
+            for (let i = 0; i < cart.items.length; i++) {
+                const cartItem = await CartItem.findById(cart.items[i]);
+                if (!cartItem) continue;
+
                 if (cartItem.product.toString() === data.product) {
-                    if (+cartItem.quantity + +data.quantity > +product.quantity) {
-                        data.quantity = +product.quantity - +cartItem.quantity;
+                    // Cập nhật số lượng nếu sản phẩm đã có
+                    let newQuantity = +cartItem.quantity + +data.quantity;
+                    if (newQuantity > product.quantity) {
+                        newQuantity = product.quantity;
                     }
-                    let cartItemUpdate = await CartItem.findByIdAndUpdate(cartItem._id, { quantity: +cartItem.quantity + +data.quantity }, { new: true });
+
+                    const cartItemUpdate = await CartItem.findByIdAndUpdate(
+                        cartItem._id,
+                        { quantity: newQuantity },
+                        { new: true }
+                    );
+
                     if (cartItemUpdate) {
                         return {
                             EC: 0,
@@ -52,15 +86,24 @@ const createCartItem = async (data) => {
                     }
                 }
             }
+
+            // Nếu sản phẩm chưa có trong giỏ => thêm mới
             if (data.quantity > product.quantity) {
                 data.quantity = product.quantity;
             }
-            let cartItemNew = await CartItem.create({
+
+            const cartItemNew = await CartItem.create({
                 product: data.product,
-                quantity: data.quantity
+                quantity: +data.quantity
             });
+
             if (cartItemNew) {
-                let cartUpdate = await Cart.findByIdAndUpdate(cart._id, { items: [...cart.items, cartItemNew._id] }, { new: true });
+                const cartUpdate = await Cart.findByIdAndUpdate(
+                    cart._id,
+                    { items: [...cart.items, cartItemNew._id] },
+                    { new: true }
+                );
+
                 if (cartUpdate) {
                     return {
                         EC: 0,
@@ -70,15 +113,100 @@ const createCartItem = async (data) => {
                 }
             }
         }
+
+        return {
+            EC: 500,
+            EM: "Failed to create or update CartItem",
+            DT: ""
+        };
     } catch (error) {
         console.error("Error creating CartItem:", error.message);
         return {
             EC: 500,
             EM: "Error creating CartItem",
-            DT: error.message // Trả về chi tiết lỗi để dễ dàng debug
+            DT: error.message
         };
     }
 };
+
+
+// Create CartItem
+// const createCartItem = async (data) => {
+//     try {
+//         // Kiểm tra xem Product đã tồn tại chưa
+//         let product = await Product.findById(data.product);
+//         if (!product) {
+//             return {
+//                 EC: 404,
+//                 EM: "Product not found",
+//                 DT: ""
+//             };
+//         }
+
+//         // Kiểm tra xem Cart đã tồn tại chưa
+//         let cart = await Cart.findOne({ userID: data.userID });
+//         if (!cart) {
+//             if (data.quantity > product.quantity) {
+//                 data.quantity = product.quantity;
+//             }
+//             let cartItemNew = await CartItem.create({
+//                 product: data.product,
+//                 quantity: +data.quantity
+//             });
+//             if (cartItemNew) {
+//                 let cartNew = await Cart.create({ userID: data.userID, items: [cartItemNew._id] });
+//                 if (cartNew) {
+//                     return {
+//                         EC: 0,
+//                         EM: "CartItem created successfully",
+//                         DT: cartItemNew
+//                     };
+//                 }
+//             }
+//         } else {
+//             for (let i = 0; i < cart.items.length; i++) {
+//                 let cartItem = await CartItem.findById(cart.items[i].toString());
+//                 if (cartItem.product.toString() === data.product) {
+//                     if (+cartItem.quantity + +data.quantity > +product.quantity) {
+//                         data.quantity = +product.quantity - +cartItem.quantity;
+//                     }
+//                     let cartItemUpdate = await CartItem.findByIdAndUpdate(cartItem._id, { quantity: +cartItem.quantity + +data.quantity }, { new: true });
+//                     if (cartItemUpdate) {
+//                         return {
+//                             EC: 0,
+//                             EM: "CartItem updated successfully",
+//                             DT: cartItemUpdate
+//                         };
+//                     }
+//                 }
+//             }
+//             if (data.quantity > product.quantity) {
+//                 data.quantity = product.quantity;
+//             }
+//             let cartItemNew = await CartItem.create({
+//                 product: data.product,
+//                 quantity: data.quantity
+//             });
+//             if (cartItemNew) {
+//                 let cartUpdate = await Cart.findByIdAndUpdate(cart._id, { items: [...cart.items, cartItemNew._id] }, { new: true });
+//                 if (cartUpdate) {
+//                     return {
+//                         EC: 0,
+//                         EM: "CartItem created successfully",
+//                         DT: cartItemNew
+//                     };
+//                 }
+//             }
+//         }
+//     } catch (error) {
+//         console.error("Error creating CartItem:", error.message);
+//         return {
+//             EC: 500,
+//             EM: "Error creating CartItem",
+//             DT: error.message // Trả về chi tiết lỗi để dễ dàng debug
+//         };
+//     }
+// };
 
 // Delete CartItem
 const deleteCartItem = async (id, userId) => {

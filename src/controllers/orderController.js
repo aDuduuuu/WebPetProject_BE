@@ -4,21 +4,22 @@ import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopPr
 const ccreateOrder = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.totalPrice || !data.paymentMethod || !data.shipmentMethod || !data.orderUser || !data.totalPrice || !data.tax || !data.totalAmount || !data.expectDeliveryDate) {
-            return res.status(200).json({
+        if (!data || !data.paymentMethod || !data.totalAmount) {
+            return res.status(400).json({
                 EC: 400,
                 EM: "Invalid input",
                 DT: ""
             });
         }
+
         let response = await createOrder({ ...data, userId: req.user.id });
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
-            DT: response.DT
+            DT: response.DT // Trả về dữ liệu MoMo nếu có (bao gồm payUrl)
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -109,57 +110,57 @@ const cgetOrder = async (req, res) => {
 
 const cgetTopProduct = async (req, res) => {
     try {
-      // Lấy các tham số year, month, day từ query string
-      const { year, month, day } = req.query;
-  
-      // Kiểm tra xem tham số năm, tháng, ngày có hợp lệ không
-      if (year && isNaN(year)) {
-        return res.status(400).json({
-          EC: 1,
-          EM: "Year must be a valid number",
-          DT: null
+        // Lấy các tham số year, month, day từ query string
+        const { year, month, day } = req.query;
+
+        // Kiểm tra xem tham số năm, tháng, ngày có hợp lệ không
+        if (year && isNaN(year)) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Year must be a valid number",
+                DT: null
+            });
+        }
+
+        if (month && (isNaN(month) || month < 1 || month > 12)) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Month must be a valid number between 1 and 12",
+                DT: null
+            });
+        }
+
+        if (day && (isNaN(day) || day < 1 || day > 31)) {
+            return res.status(400).json({
+                EC: 1,
+                EM: "Day must be a valid number between 1 and 31",
+                DT: null
+            });
+        }
+
+        // Gọi hàm getTopProduct với các tham số lọc (nếu có)
+        let response = await getTopProduct({
+            year: year ? parseInt(year) : undefined,  // Nếu có year thì chuyển thành số
+            month: month ? month.padStart(2, '0') : undefined,  // Đảm bảo month là 2 chữ số
+            day: day ? day.padStart(2, '0') : undefined,  // Đảm bảo day là 2 chữ số
         });
-      }
-  
-      if (month && (isNaN(month) || month < 1 || month > 12)) {
-        return res.status(400).json({
-          EC: 1,
-          EM: "Month must be a valid number between 1 and 12",
-          DT: null
+
+        // Trả về kết quả cho client
+        return res.status(response.EC === 0 ? 200 : 400).json({
+            EC: response.EC,
+            EM: response.EM,
+            DT: response.DT
         });
-      }
-  
-      if (day && (isNaN(day) || day < 1 || day > 31)) {
-        return res.status(400).json({
-          EC: 1,
-          EM: "Day must be a valid number between 1 and 31",
-          DT: null
-        });
-      }
-  
-      // Gọi hàm getTopProduct với các tham số lọc (nếu có)
-      let response = await getTopProduct({
-        year: year ? parseInt(year) : undefined,  // Nếu có year thì chuyển thành số
-        month: month ? month.padStart(2, '0') : undefined,  // Đảm bảo month là 2 chữ số
-        day: day ? day.padStart(2, '0') : undefined,  // Đảm bảo day là 2 chữ số
-      });
-  
-      // Trả về kết quả cho client
-      return res.status(response.EC === 0 ? 200 : 400).json({
-        EC: response.EC,
-        EM: response.EM,
-        DT: response.DT
-      });
     } catch (error) {
-      console.error(error);
-      return res.status(500).json({
-        EC: 500,
-        EM: "Error from server",
-        DT: ""
-      });
+        console.error(error);
+        return res.status(500).json({
+            EC: 500,
+            EM: "Error from server",
+            DT: ""
+        });
     }
-  };
-  
+};
+
 
 const cgetAllOrders = async (req, res) => {
     try {
