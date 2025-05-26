@@ -4,90 +4,228 @@ import OrderItem from "../models/orderitem.js";
 import Order from "../models/order.js";
 import Product from "../models/product.js";
 import { ObjectId } from "mongodb";
-import { statusOrder } from "../utils/constant.js";
+import axios from 'axios';
+import crypto from 'crypto';
 
 // Create OrderItem
+// const createOrder = async (data) => {
+//     try {
+//         let card = await Cart.findOne({ userID: data.userId });
+//         if (!card) {
+//             return {
+//                 EC: 404,
+//                 EM: "Cart not found",
+//                 DT: ""
+//             };
+//         } else {
+//             let arrItem = [];
+//             for (let i = 0; i < card.items.length; i++) {
+//                 let cartItem = await CartItem.findById(card.items[i].toString());
+//                 if (cartItem) {
+//                     let deleteCartItem = await CartItem.findByIdAndDelete(cartItem._id.toString());
+//                     console.log("chekc deleteCartItem", deleteCartItem);
+//                     if (deleteCartItem) {
+//                         let product = await Product.findOneAndUpdate(cartItem.product, { $inc: { quantity: -cartItem.quantity } }, { new: true });
+//                         if (product) {
+//                             let orderItem = await OrderItem.create({ product: cartItem.product, quantity: cartItem.quantity });
+//                             console.log("check orderItem", orderItem);
+//                             arrItem.push(orderItem._id.toString());
+//                         } else {
+//                             return {
+//                                 EC: 500,
+//                                 EM: "Error updating Product",
+//                                 DT: ""
+//                             };
+//                         }
+//                     } else {
+//                         return {
+//                             EC: 500,
+//                             EM: "Error deleting CartItem",
+//                             DT: ""
+//                         };
+//                     }
+//                 } else {
+//                     return {
+//                         EC: 404,
+//                         EM: "CartItem not found",
+//                         DT: ""
+//                     };
+//                 }
+//             }
+//             let order = await Order.create({
+//                 userID: data.userId,
+//                 orderDate: Date.now(),
+//                 paymentMethod: data.paymentMethod,
+//                 shipmentMethod: data.shipmentMethod,
+//                 orderUser: data.orderUser,
+//                 totalAmount: data.totalAmount,
+//                 totalPrice: data.totalPrice,
+//                 expectDeliveryDate: data.expectDeliveryDate,
+//                 tax: data.tax,
+//                 status: statusOrder.ordered,
+//                 orderItems: arrItem
+//             });
+//             if (order) {
+//                 await Cart.findByIdAndUpdate(card._id, { items: [] }, { new: true });
+//                 return {
+//                     EC: 0,
+//                     EM: "Order created successfully",
+//                     DT: order
+//                 };
+//             } else {
+//                 return {
+//                     EC: 500,
+//                     EM: "Error creating Order",
+//                     DT: ""
+//                 };
+//             }
+//         }
+//     } catch (error) {
+//         console.error("Error creating OrderItem:", error.message);
+//         return {
+//             EC: 500,
+//             EM: "Error creating OrderItem",
+//             DT: error.message // Trả về chi tiết lỗi để dễ dàng debug
+//         };
+//     }
+// };
+const statusOrder = {
+    ordered: "ordered",
+    waitingship: "waitingship",
+    shipping: "shipping",
+    delivered: "delivered",
+    cancel: "cancel"
+};
+const accessKey = 'F8BBA842ECF85';
+const secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
+const partnerCode = 'MOMO';
+const redirectUrl = 'http://localhost:5173/orderList'; // URL nhận kết quả sau khi thanh toán
+const ipnUrl = 'https://petcare-pro-be.onrender.com/callback';
+
+// Service tạo đơn hàng
 const createOrder = async (data) => {
     try {
-        let card = await Cart.findOne({ userID: data.userId });
-        if (!card) {
-            return {
-                EC: 404,
-                EM: "Cart not found",
-                DT: ""
-            };
-        } else {
-            let arrItem = [];
-            for (let i = 0; i < card.items.length; i++) {
-                let cartItem = await CartItem.findById(card.items[i].toString());
-                if (cartItem) {
-                    let deleteCartItem = await CartItem.findByIdAndDelete(cartItem._id.toString());
-                    console.log("chekc deleteCartItem", deleteCartItem);
-                    if (deleteCartItem) {
-                        let product = await Product.findOneAndUpdate(cartItem.product, { $inc: { quantity: -cartItem.quantity } }, { new: true });
-                        if (product) {
-                            let orderItem = await OrderItem.create({ product: cartItem.product, quantity: cartItem.quantity });
-                            console.log("check orderItem", orderItem);
-                            arrItem.push(orderItem._id.toString());
-                        } else {
-                            return {
-                                EC: 500,
-                                EM: "Error updating Product",
-                                DT: ""
-                            };
-                        }
-                    } else {
-                        return {
-                            EC: 500,
-                            EM: "Error deleting CartItem",
-                            DT: ""
-                        };
-                    }
-                } else {
-                    return {
-                        EC: 404,
-                        EM: "CartItem not found",
-                        DT: ""
-                    };
-                }
-            }
-            let order = await Order.create({
-                userID: data.userId,
-                orderDate: Date.now(),
-                paymentMethod: data.paymentMethod,
-                shipmentMethod: data.shipmentMethod,
-                orderUser: data.orderUser,
-                totalAmount: data.totalAmount,
-                totalPrice: data.totalPrice,
-                expectDeliveryDate: data.expectDeliveryDate,
-                tax: data.tax,
-                status: statusOrder.ordered,
-                orderItems: arrItem
-            });
-            if (order) {
-                await Cart.findByIdAndUpdate(card._id, { items: [] }, { new: true });
-                return {
-                    EC: 0,
-                    EM: "Order created successfully",
-                    DT: order
-                };
-            } else {
-                return {
-                    EC: 500,
-                    EM: "Error creating Order",
-                    DT: ""
-                };
-            }
+        let cart = await Cart.findOne({ userID: data.userId }).populate("items");
+        if (!cart || cart.items.length === 0) {
+            return { EC: 404, EM: "Cart is empty or not found", DT: "" };
         }
+
+        // Tạm lưu các item để tạo OrderItem
+        let tempCartItems = cart.items.map(item => ({
+            _id: item._id,
+            product: item.product,
+            quantity: item.quantity
+        }));
+
+        // Tạo đơn hàng trước
+        let newOrder = await Order.create({
+            userID: data.userId,
+            orderDate: Date.now(),
+            paymentMethod: data.paymentMethod,
+            shipmentMethod: data.shipmentMethod,
+            orderUser: data.orderUser,
+            totalAmount: data.totalAmount,
+            totalPrice: data.totalPrice,
+            expectDeliveryDate: data.expectDeliveryDate,
+            tax: data.tax,
+            status: data.paymentMethod.name === 'MoMo' ? statusOrder.ordered : statusOrder.ordered,
+            orderItems: [] // sẽ cập nhật sau
+        });
+
+        // Tạo các OrderItem, trừ kho, xóa từng item trong cart
+        let orderItemIds = [];
+
+        for (let item of tempCartItems) {
+            let orderItem = await OrderItem.create({
+                product: item.product,
+                quantity: item.quantity
+            });
+            orderItemIds.push(orderItem._id.toString());
+
+            // Trừ kho
+            await Product.findByIdAndUpdate(item.product, {
+                $inc: { quantity: -item.quantity }
+            });
+
+            // Xoá cart item
+            await CartItem.findByIdAndDelete(item._id);
+        }
+
+        // Cập nhật order với danh sách orderItems
+        await Order.findByIdAndUpdate(newOrder._id, {
+            orderItems: orderItemIds
+        });
+
+        // Xoá giỏ hàng
+        await Cart.findByIdAndDelete(cart._id);
+
+        // Nếu là thanh toán bằng MoMo thì gọi API MoMo sau khi đã tạo đơn xong
+        if (data.paymentMethod.name === 'MoMo') {
+            const orderId = partnerCode + newOrder._id;
+            const amount = data.totalAmount;
+            const orderInfo = 'Pay with MoMo';
+            const requestId = orderId;
+            const lang = 'en';
+
+            const extraDataObj = {
+                userId: data.userId,
+                orderId: newOrder._id.toString()
+            };
+            const extraData = Buffer.from(JSON.stringify(extraDataObj)).toString('base64');
+
+            const rawSignature = `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=payWithMethod`;
+            const signature = crypto.createHmac('sha256', secretKey).update(rawSignature).digest('hex');
+
+            const requestBody = {
+                partnerCode,
+                storeId: "MomoTestStore",
+                requestId,
+                amount,
+                orderId,
+                orderInfo,
+                redirectUrl,
+                ipnUrl,
+                lang,
+                requestType: "payWithMethod",
+                autoCapture: true,
+                extraData,
+                signature
+            };
+
+            const momoResponse = await axios({
+                method: "POST",
+                url: "https://test-payment.momo.vn/v2/gateway/api/create",
+                headers: { 'Content-Type': 'application/json' },
+                data: requestBody
+            });
+
+            return {
+                EC: 0,
+                EM: "Redirecting to MoMo",
+                DT: {
+                    payUrl: momoResponse.data.payUrl,
+                    orderId: newOrder._id
+                }
+            };
+        }
+
+        // Nếu không phải MoMo thì chỉ trả về đơn hàng đã tạo
+        return {
+            EC: 0,
+            EM: "Order created successfully",
+            DT: newOrder
+        };
+
     } catch (error) {
-        console.error("Error creating OrderItem:", error.message);
+        console.error("Error creating Order:", error.message);
         return {
             EC: 500,
-            EM: "Error creating OrderItem",
-            DT: error.message // Trả về chi tiết lỗi để dễ dàng debug
+            EM: "Error creating Order",
+            DT: error.message
         };
     }
 };
+
 
 // Delete OrderItem
 const deleteOrder = async (id) => {
@@ -390,14 +528,18 @@ const getAllOrders = async (data) => {
         // Monthly revenue aggregation
         const monthlyRevenueResult = await Order.aggregate([
             { $match: { ...filter, status: 'delivered' } },  // Ensure only "delivered" orders are considered
-            { $project: { 
-                month: { $month: '$orderDate' },  // Extract month from orderDate
-                totalAmount: 1  // Include totalAmount in the projection
-            }},
-            { $group: { 
-                _id: '$month', 
-                revenue: { $sum: '$totalAmount' }
-            }},
+            {
+                $project: {
+                    month: { $month: '$orderDate' },  // Extract month from orderDate
+                    totalAmount: 1  // Include totalAmount in the projection
+                }
+            },
+            {
+                $group: {
+                    _id: '$month',
+                    revenue: { $sum: '$totalAmount' }
+                }
+            },
             { $sort: { _id: 1 } }  // Sort by month
         ]);
 
@@ -441,123 +583,123 @@ const getAllOrders = async (data) => {
 
 const getTopProduct = async ({ year, month, day }) => {
     try {
-      // Xây dựng điều kiện lọc cho orderDate
-      let dateFilter = {};
-  
-      if (year) {
-        // Lọc theo năm
-        const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
-        const endOfYear = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
-        dateFilter.orderDate = { $gte: startOfYear, $lt: endOfYear };
-      }
-  
-      // Filter by month (using orderDate)
-if (month) {
-    const validMonth = parseInt(month);
-    if (isNaN(validMonth) || validMonth < 1 || validMonth > 12) {
+        // Xây dựng điều kiện lọc cho orderDate
+        let dateFilter = {};
+
+        if (year) {
+            // Lọc theo năm
+            const startOfYear = new Date(`${year}-01-01T00:00:00.000Z`);
+            const endOfYear = new Date(`${parseInt(year) + 1}-01-01T00:00:00.000Z`);
+            dateFilter.orderDate = { $gte: startOfYear, $lt: endOfYear };
+        }
+
+        // Filter by month (using orderDate)
+        if (month) {
+            const validMonth = parseInt(month);
+            if (isNaN(validMonth) || validMonth < 1 || validMonth > 12) {
+                return {
+                    EC: 400,
+                    EM: "Invalid month",
+                    DT: "Month must be between 1 and 12"
+                };
+            }
+
+            const startOfMonth = new Date(`${year}-${validMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+            let nextMonth = validMonth + 1;  // Next month is the next integer month value
+
+            let nextYear = year;  // Default is the same year
+
+            if (nextMonth === 13) {  // Special case for December
+                nextMonth = 1;  // Reset to January
+                nextYear = parseInt(year) + 1;  // Increment the year
+            }
+
+            const endOfMonth = new Date(`${nextYear}-${nextMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
+
+            dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfMonth, $lt: endOfMonth };
+        }
+
+
+        if (day) {
+            // Lọc theo năm, tháng và ngày
+            const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+            const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+            dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfDay, $lt: endOfDay };
+        }
+
+        // Bắt đầu pipeline aggregation
+        const result = await Order.aggregate([
+            // Lọc đơn hàng theo orderDate nếu có điều kiện
+            { $match: dateFilter },
+
+            // Lấy thông tin các OrderItem và nhóm theo sản phẩm
+            { $unwind: "$orderItems" },
+            {
+                $lookup: {
+                    from: "orderitems",  // Bảng OrderItem
+                    localField: "orderItems",
+                    foreignField: "_id",
+                    as: "orderItemDetails",
+                }
+            },
+            { $unwind: "$orderItemDetails" },  // Làm phẳng mảng orderItemDetails
+
+            // Nhóm lại theo sản phẩm và tính tổng số lượng bán ra
+            {
+                $group: {
+                    _id: "$orderItemDetails.product",  // Nhóm theo sản phẩm
+                    totalQuantity: { $sum: "$orderItemDetails.quantity" }  // Tính tổng số lượng bán
+                }
+            },
+
+            // Sắp xếp các sản phẩm theo số lượng bán được (giảm dần)
+            { $sort: { totalQuantity: -1 } },
+
+            // Giới hạn kết quả lấy 4 sản phẩm bán chạy nhất
+            { $limit: 4 },
+
+            // Lookup để lấy thêm thông tin sản phẩm
+            {
+                $lookup: {
+                    from: "products",  // Bảng Product
+                    localField: "_id",  // Trường _id trong nhóm sẽ khớp với product._id
+                    foreignField: "_id",
+                    as: "productDetails",
+                }
+            },
+
+            // Làm phẳng mảng productDetails để lấy thông tin chi tiết sản phẩm
+            { $unwind: "$productDetails" },
+
+            // Trả về kết quả
+            {
+                $project: {
+                    _id: 0,
+                    productId: "$_id",
+                    totalQuantity: 1,
+                    productName: "$productDetails.name",
+                    productPrice: "$productDetails.price",
+                    productImage: "$productDetails.image",
+                }
+            }
+        ]);
+
         return {
-            EC: 400,
-            EM: "Invalid month",
-            DT: "Month must be between 1 and 12"
+            EC: 0,
+            EM: "Get Top Products successfully",
+            DT: result,
+        };
+
+    } catch (error) {
+        console.error("Error in getTopProduct:", error.message);
+        return {
+            EC: 500,
+            EM: "Error from server",
+            DT: error.message,
         };
     }
+};
 
-    const startOfMonth = new Date(`${year}-${validMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
-    let nextMonth = validMonth + 1;  // Next month is the next integer month value
-
-    let nextYear = year;  // Default is the same year
-
-    if (nextMonth === 13) {  // Special case for December
-        nextMonth = 1;  // Reset to January
-        nextYear = parseInt(year) + 1;  // Increment the year
-    }
-
-    const endOfMonth = new Date(`${nextYear}-${nextMonth.toString().padStart(2, '0')}-01T00:00:00.000Z`);
-
-    dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfMonth, $lt: endOfMonth };
-}
-
-  
-      if (day) {
-        // Lọc theo năm, tháng và ngày
-        const date = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
-        const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-        const endOfDay = new Date(date.setHours(23, 59, 59, 999));
-        dateFilter.orderDate = { ...dateFilter.orderDate, $gte: startOfDay, $lt: endOfDay };
-      }
-  
-      // Bắt đầu pipeline aggregation
-      const result = await Order.aggregate([
-        // Lọc đơn hàng theo orderDate nếu có điều kiện
-        { $match: dateFilter },
-  
-        // Lấy thông tin các OrderItem và nhóm theo sản phẩm
-        { $unwind: "$orderItems" },
-        {
-          $lookup: {
-            from: "orderitems",  // Bảng OrderItem
-            localField: "orderItems",
-            foreignField: "_id",
-            as: "orderItemDetails",
-          }
-        },
-        { $unwind: "$orderItemDetails" },  // Làm phẳng mảng orderItemDetails
-  
-        // Nhóm lại theo sản phẩm và tính tổng số lượng bán ra
-        {
-          $group: {
-            _id: "$orderItemDetails.product",  // Nhóm theo sản phẩm
-            totalQuantity: { $sum: "$orderItemDetails.quantity" }  // Tính tổng số lượng bán
-          }
-        },
-        
-        // Sắp xếp các sản phẩm theo số lượng bán được (giảm dần)
-        { $sort: { totalQuantity: -1 } },
-  
-        // Giới hạn kết quả lấy 4 sản phẩm bán chạy nhất
-        { $limit: 4 },
-  
-        // Lookup để lấy thêm thông tin sản phẩm
-        {
-          $lookup: {
-            from: "products",  // Bảng Product
-            localField: "_id",  // Trường _id trong nhóm sẽ khớp với product._id
-            foreignField: "_id",
-            as: "productDetails",
-          }
-        },
-  
-        // Làm phẳng mảng productDetails để lấy thông tin chi tiết sản phẩm
-        { $unwind: "$productDetails" },
-  
-        // Trả về kết quả
-        {
-          $project: {
-            _id: 0,
-            productId: "$_id",
-            totalQuantity: 1,
-            productName: "$productDetails.name",
-            productPrice: "$productDetails.price",
-            productImage: "$productDetails.image",
-          }
-        }
-      ]);
-  
-      return {
-        EC: 0,
-        EM: "Get Top Products successfully",
-        DT: result,
-      };
-  
-    } catch (error) {
-      console.error("Error in getTopProduct:", error.message);
-      return {
-        EC: 500,
-        EM: "Error from server",
-        DT: error.message,
-      };
-    }
-  };
-  
 
 export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct };
