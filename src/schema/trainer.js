@@ -14,6 +14,15 @@ const trainerSchema = new mongoose.Schema({
   contactInfo: {
       phone: { type: String },
       email: { type: String }
+  },
+  workingHours: {
+    monday: { type: String },
+    tuesday: { type: String },
+    wednesday: { type: String },
+    thursday: { type: String },
+    friday: { type: String },
+    saturday: { type: String },
+    sunday: { type: String },
   }
 });
 
