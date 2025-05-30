@@ -4,105 +4,71 @@ import OrderItem from "../models/orderitem.js";
 import Order from "../models/order.js";
 import Product from "../models/product.js";
 import { ObjectId } from "mongodb";
-import axios from 'axios';
+import { statusOrder } from "../utils/constant.js";
+import axios from "axios";
 import crypto from 'crypto';
 
-// Create OrderItem
-// const createOrder = async (data) => {
-//     try {
-//         let card = await Cart.findOne({ userID: data.userId });
-//         if (!card) {
-//             return {
-//                 EC: 404,
-//                 EM: "Cart not found",
-//                 DT: ""
-//             };
-//         } else {
-//             let arrItem = [];
-//             for (let i = 0; i < card.items.length; i++) {
-//                 let cartItem = await CartItem.findById(card.items[i].toString());
-//                 if (cartItem) {
-//                     let deleteCartItem = await CartItem.findByIdAndDelete(cartItem._id.toString());
-//                     console.log("chekc deleteCartItem", deleteCartItem);
-//                     if (deleteCartItem) {
-//                         let product = await Product.findOneAndUpdate(cartItem.product, { $inc: { quantity: -cartItem.quantity } }, { new: true });
-//                         if (product) {
-//                             let orderItem = await OrderItem.create({ product: cartItem.product, quantity: cartItem.quantity });
-//                             console.log("check orderItem", orderItem);
-//                             arrItem.push(orderItem._id.toString());
-//                         } else {
-//                             return {
-//                                 EC: 500,
-//                                 EM: "Error updating Product",
-//                                 DT: ""
-//                             };
-//                         }
-//                     } else {
-//                         return {
-//                             EC: 500,
-//                             EM: "Error deleting CartItem",
-//                             DT: ""
-//                         };
-//                     }
-//                 } else {
-//                     return {
-//                         EC: 404,
-//                         EM: "CartItem not found",
-//                         DT: ""
-//                     };
-//                 }
-//             }
-//             let order = await Order.create({
-//                 userID: data.userId,
-//                 orderDate: Date.now(),
-//                 paymentMethod: data.paymentMethod,
-//                 shipmentMethod: data.shipmentMethod,
-//                 orderUser: data.orderUser,
-//                 totalAmount: data.totalAmount,
-//                 totalPrice: data.totalPrice,
-//                 expectDeliveryDate: data.expectDeliveryDate,
-//                 tax: data.tax,
-//                 status: statusOrder.ordered,
-//                 orderItems: arrItem
-//             });
-//             if (order) {
-//                 await Cart.findByIdAndUpdate(card._id, { items: [] }, { new: true });
-//                 return {
-//                     EC: 0,
-//                     EM: "Order created successfully",
-//                     DT: order
-//                 };
-//             } else {
-//                 return {
-//                     EC: 500,
-//                     EM: "Error creating Order",
-//                     DT: ""
-//                 };
-//             }
-//         }
-//     } catch (error) {
-//         console.error("Error creating OrderItem:", error.message);
-//         return {
-//             EC: 500,
-//             EM: "Error creating OrderItem",
-//             DT: error.message // Trả về chi tiết lỗi để dễ dàng debug
-//         };
-//     }
-// };
-const statusOrder = {
-    ordered: "ordered",
-    waitingship: "waitingship",
-    shipping: "shipping",
-    delivered: "delivered",
-    cancel: "cancel"
+const handleMoMoCallback = async (callbackData) => {
+    const resultCode = callbackData.resultCode;
+    if (resultCode !== 0) {
+        return { success: false, message: "MoMo payment failed or cancelled" };
+    }
+
+    const extraDataDecoded = JSON.parse(Buffer.from(callbackData.extraData, 'base64').toString('utf-8'));
+    const {
+        userId,
+        cartItems,
+        paymentMethod,
+        shipmentMethod,
+        orderUser,
+        totalAmount,
+        totalPrice,
+        expectDeliveryDate,
+        tax
+    } = extraDataDecoded;
+
+    let newOrder = await Order.create({
+        userID: userId,
+        orderDate: Date.now(),
+        paymentMethod,
+        shipmentMethod,
+        orderUser,
+        totalAmount,
+        totalPrice,
+        expectDeliveryDate,
+        tax,
+        status: statusOrder.ordered,
+        orderItems: []
+    });
+
+    let orderItemIds = [];
+
+    for (let item of cartItems) {
+        const orderItem = await OrderItem.create({
+            product: item.product,
+            quantity: item.quantity
+        });
+        orderItemIds.push(orderItem._id);
+
+        await Product.findByIdAndUpdate(item.product, {
+            $inc: { quantity: -item.quantity }
+        });
+
+        await CartItem.findByIdAndDelete(item._id);
+    }
+
+    await Order.findByIdAndUpdate(newOrder._id, { orderItems: orderItemIds });
+    await Cart.findOneAndDelete({ userID: userId });
+
+    return { success: true, message: "Order created successfully", order: newOrder };
 };
+
 const accessKey = 'F8BBA842ECF85';
 const secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
 const partnerCode = 'MOMO';
 const redirectUrl = 'http://localhost:5173/orderList'; // URL nhận kết quả sau khi thanh toán
-const ipnUrl = 'https://petcare-pro-be.onrender.com/callback';
+const ipnUrl = 'https://new-be-71aa.onrender.com/api/orders/callback';
 
-// Service tạo đơn hàng
 const createOrder = async (data) => {
     try {
         let cart = await Cart.findOne({ userID: data.userId }).populate("items");
@@ -110,66 +76,30 @@ const createOrder = async (data) => {
             return { EC: 404, EM: "Cart is empty or not found", DT: "" };
         }
 
-        // Tạm lưu các item để tạo OrderItem
-        let tempCartItems = cart.items.map(item => ({
-            _id: item._id,
-            product: item.product,
-            quantity: item.quantity
-        }));
-
-        // Tạo đơn hàng trước
-        let newOrder = await Order.create({
-            userID: data.userId,
-            orderDate: Date.now(),
-            paymentMethod: data.paymentMethod,
-            shipmentMethod: data.shipmentMethod,
-            orderUser: data.orderUser,
-            totalAmount: data.totalAmount,
-            totalPrice: data.totalPrice,
-            expectDeliveryDate: data.expectDeliveryDate,
-            tax: data.tax,
-            status: data.paymentMethod.name === 'MoMo' ? statusOrder.ordered : statusOrder.ordered,
-            orderItems: [] // sẽ cập nhật sau
-        });
-
-        // Tạo các OrderItem, trừ kho, xóa từng item trong cart
-        let orderItemIds = [];
-
-        for (let item of tempCartItems) {
-            let orderItem = await OrderItem.create({
-                product: item.product,
-                quantity: item.quantity
-            });
-            orderItemIds.push(orderItem._id.toString());
-
-            // Trừ kho
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { quantity: -item.quantity }
-            });
-
-            // Xoá cart item
-            await CartItem.findByIdAndDelete(item._id);
-        }
-
-        // Cập nhật order với danh sách orderItems
-        await Order.findByIdAndUpdate(newOrder._id, {
-            orderItems: orderItemIds
-        });
-
-        // Xoá giỏ hàng
-        await Cart.findByIdAndDelete(cart._id);
-
-        // Nếu là thanh toán bằng MoMo thì gọi API MoMo sau khi đã tạo đơn xong
+        // Nếu là MoMo thì KHÔNG tạo đơn ngay mà chuyển hướng đến MoMo
         if (data.paymentMethod.name === 'MoMo') {
-            const orderId = partnerCode + newOrder._id;
-            const amount = data.totalAmount;
             const orderInfo = 'Pay with MoMo';
+            const amount = data.totalAmount;
+            const orderId = partnerCode + Date.now();
             const requestId = orderId;
             const lang = 'en';
 
+            const tempCartItems = cart.items.map(item => ({
+                _id: item._id,
+                product: item.product,
+                quantity: item.quantity
+            }));
+
             const extraDataObj = {
                 userId: data.userId,
-                orderId: newOrder._id.toString()
+                cartItems: tempCartItems,
+                paymentMethod: data.paymentMethod,
+                shipmentMethod: data.shipmentMethod,
+                orderUser: data.orderUser,
+                totalAmount: data.totalAmount,
+                totalPrice: data.totalPrice,
+                expectDeliveryDate: data.expectDeliveryDate,
+                tax: data.tax
             };
             const extraData = Buffer.from(JSON.stringify(extraDataObj)).toString('base64');
 
@@ -203,13 +133,57 @@ const createOrder = async (data) => {
                 EC: 0,
                 EM: "Redirecting to MoMo",
                 DT: {
-                    payUrl: momoResponse.data.payUrl,
-                    orderId: newOrder._id
+                    payUrl: momoResponse.data.payUrl
                 }
             };
         }
 
-        // Nếu không phải MoMo thì chỉ trả về đơn hàng đã tạo
+        // ===========================
+        // Nếu KHÔNG phải MoMo => tạo đơn luôn
+        // ===========================
+
+        const tempCartItems = cart.items.map(item => ({
+            _id: item._id,
+            product: item.product,
+            quantity: item.quantity
+        }));
+
+        let newOrder = await Order.create({
+            userID: data.userId,
+            orderDate: Date.now(),
+            paymentMethod: data.paymentMethod,
+            shipmentMethod: data.shipmentMethod,
+            orderUser: data.orderUser,
+            totalAmount: data.totalAmount,
+            totalPrice: data.totalPrice,
+            expectDeliveryDate: data.expectDeliveryDate,
+            tax: data.tax,
+            status: statusOrder.ordered,
+            orderItems: []
+        });
+
+        let orderItemIds = [];
+
+        for (let item of tempCartItems) {
+            const orderItem = await OrderItem.create({
+                product: item.product,
+                quantity: item.quantity
+            });
+            orderItemIds.push(orderItem._id);
+
+            await Product.findByIdAndUpdate(item.product, {
+                $inc: { quantity: -item.quantity }
+            });
+
+            await CartItem.findByIdAndDelete(item._id);
+        }
+
+        await Order.findByIdAndUpdate(newOrder._id, {
+            orderItems: orderItemIds
+        });
+
+        await Cart.findByIdAndDelete(cart._id);
+
         return {
             EC: 0,
             EM: "Order created successfully",
@@ -217,7 +191,7 @@ const createOrder = async (data) => {
         };
 
     } catch (error) {
-        console.error("Error creating Order:", error.message);
+        console.error("Error creating Order:", error); // In lỗi đầy đủ
         return {
             EC: 500,
             EM: "Error creating Order",
@@ -702,4 +676,4 @@ const getTopProduct = async ({ year, month, day }) => {
 };
 
 
-export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct };
+export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback };

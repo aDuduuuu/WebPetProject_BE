@@ -1,25 +1,42 @@
-import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopProduct } from "../services/orderService.js";
+import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback } from "../services/orderService.js";
+
+const momoCallback = async (req, res) => {
+    console.log("🔥 Callback received from MoMo:");
+    console.log(req.body); // xem có dữ liệu không
+
+    try {
+        const result = await handleMoMoCallback(req.body);
+        if (result.success) {
+            return res.status(200).json({ message: result.message, order: result.order });
+        } else {
+            return res.status(200).json({ message: result.message });
+        }
+    } catch (error) {
+        console.error("❌ Callback Error:", error.message);
+        return res.status(500).json({ message: "Callback handling failed", error: error.message });
+    }
+};
+
 
 // Create Order
 const ccreateOrder = async (req, res) => {
     try {
         let data = req.body;
-        if (!data || !data.paymentMethod || !data.totalAmount) {
-            return res.status(400).json({
+        if (!data || !data.totalPrice || !data.paymentMethod || !data.shipmentMethod || !data.orderUser || !data.totalPrice || !data.tax || !data.totalAmount || !data.expectDeliveryDate) {
+            return res.status(200).json({
                 EC: 400,
                 EM: "Invalid input",
                 DT: ""
             });
         }
-
         let response = await createOrder({ ...data, userId: req.user.id });
         return res.status(200).json({
             EC: response.EC,
             EM: response.EM,
-            DT: response.DT // Trả về dữ liệu MoMo nếu có (bao gồm payUrl)
+            DT: response.DT
         });
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(500).json({
             EC: 500,
             EM: "Error from server",
@@ -27,6 +44,7 @@ const ccreateOrder = async (req, res) => {
         });
     }
 };
+
 
 // Update Order
 const cupdateOrder = async (req, res) => {
@@ -190,4 +208,4 @@ const cgetAllOrders = async (req, res) => {
 
 
 
-export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders, cgetTopProduct as getTopProduct };
+export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders, cgetTopProduct as getTopProduct, momoCallback };
