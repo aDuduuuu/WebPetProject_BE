@@ -7,7 +7,7 @@ let router = express.Router();
 
 let initReviewRoute = (app) => {
     router.post("/reviews", authenticateToken, createReview); // Create a new Review
-    router.get("/reviews/:id?", authenticateToken, getReview); // Get Review by ID
+    router.get("/reviews/:id?", getReview); // Get Review by ID
     router.patch("/reviews/:id", updateReview); // Update Review by ID
     router.delete("/reviews/:id", deleteReview); // Delete Review by ID
 

@@ -92,12 +92,12 @@ const cdeleteReview = async (req, res) => {
 const cgetReview = async (req, res) => {
     try {
         let id = req.params.id;
-        let useReviewID = req.user.id;
+        let useReviewID = req.user?.id || null;
         let productID = req.query.productID;
         let page = parseInt(req.query.page) || 1;
         let limit = parseInt(req.query.limit) || 20;
 
-        // Allowed query parameters
+        // Optional: kiểm tra tham số không hợp lệ
         const allowedQueries = ["page", "limit", "useReviewID", "productID"];
         const invalidQueries = Object.keys(req.query).filter(key => !allowedQueries.includes(key));
         if (invalidQueries.length > 0) {
