@@ -62,7 +62,7 @@ const cupdateProduct = async (req, res) => {
 const cdeleteProduct = async (req, res) => {
     try {
         let id = req.params.id;
-        let useProductCode = req.query.useProductCode === "true"; // Check if we want to delete by productCode
+        let useProductCode = req.query.useProductCode === "true"; // Check if we want to update by productCode
         if (!id) {
             return res.status(200).json({
                 EC: 400,
@@ -86,6 +86,7 @@ const cdeleteProduct = async (req, res) => {
         });
     }
 };
+
 
 // Get Product (by id, productCode, or all products with pagination)
 const cgetProduct = async (req, res) => {
@@ -146,4 +147,4 @@ const csearchProductByName = async (req, res) => {
 };
 
 
-export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct, csearchProductByName as searchProductByName};
+export { ccreateProduct as createProduct, cupdateProduct as updateProduct, cdeleteProduct as deleteProduct, cgetProduct as getProduct, csearchProductByName as searchProductByName };
