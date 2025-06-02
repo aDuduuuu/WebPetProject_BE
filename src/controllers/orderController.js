@@ -1,4 +1,4 @@
-import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback } from "../services/orderService.js";
+import { createOrder, updateOrder, deleteOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback, handleZaloCallback } from "../services/orderService.js";
 
 const momoCallback = async (req, res) => {
     console.log("🔥 Callback received from MoMo:");
@@ -16,6 +16,25 @@ const momoCallback = async (req, res) => {
         return res.status(500).json({ message: "Callback handling failed", error: error.message });
     }
 };
+
+const zaloCallback = async (req, res) => {
+    console.log("🔥 Callback received from Zalo:");
+    console.log(req.body);
+
+    try {
+        const parsedData = JSON.parse(req.body.data); // 👈 Rất quan trọng!
+        const result = await handleZaloCallback(parsedData);
+        if (result.success) {
+            return res.status(200).json({ message: result.message, order: result.order });
+        } else {
+            return res.status(200).json({ message: result.message });
+        }
+    } catch (error) {
+        console.error("❌ Callback Error:", error.message);
+        return res.status(500).json({ message: "Callback handling failed", error: error.message });
+    }
+};
+
 
 
 // Create Order
@@ -208,4 +227,4 @@ const cgetAllOrders = async (req, res) => {
 
 
 
-export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders, cgetTopProduct as getTopProduct, momoCallback };
+export { ccreateOrder as createOrder, cupdateOrder as updateOrder, cdeleteOrder as deleteOrder, cgetOrder as getOrder, cgetAllOrders as getAllOrders, cgetTopProduct as getTopProduct, momoCallback, zaloCallback };

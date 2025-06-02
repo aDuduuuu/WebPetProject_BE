@@ -22,13 +22,10 @@ import { filterRoute } from './src/routes/filterRoute.js';
 import { TProRoute } from './src/routes/topproductRoute.js';
 import { dogFoodRoute } from './src/routes/dogfoodRoute.js';
 
-
 dotenv.config();
-
 connectDB();
-
 const app = express();
-
+app.use(bodyParser.json());
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
