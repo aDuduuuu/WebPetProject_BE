@@ -7,6 +7,61 @@ import { ObjectId } from "mongodb";
 import { statusOrder } from "../utils/constant.js";
 import axios from "axios";
 import crypto from 'crypto';
+import CryptoJS from "crypto-js";
+import moment from "moment";
+
+const handleZaloCallback = async (callbackData) => {
+    // Lấy embed_data từ callback để giải mã thông tin đơn hàng
+    const embedDataDecoded = JSON.parse(callbackData.embed_data);
+    console.log("📦 embedDataDecoded:", embedDataDecoded);
+    const {
+        userId,
+        cartItems,
+        paymentMethod,
+        shipmentMethod,
+        orderUser,
+        totalAmount,
+        totalPrice,
+        expectDeliveryDate,
+        tax
+    } = embedDataDecoded;
+
+    let newOrder = await Order.create({
+        userID: userId,
+        orderDate: Date.now(),
+        paymentMethod,
+        shipmentMethod,
+        orderUser,
+        totalAmount,
+        totalPrice,
+        expectDeliveryDate,
+        tax,
+        status: statusOrder.ordered,
+        orderItems: []
+    });
+
+    let orderItemIds = [];
+
+    for (let item of cartItems) {
+        const orderItem = await OrderItem.create({
+            product: item.product,
+            quantity: item.quantity
+        });
+        orderItemIds.push(orderItem._id);
+
+        await Product.findByIdAndUpdate(item.product, {
+            $inc: { quantity: -item.quantity }
+        });
+
+        await CartItem.findByIdAndDelete(item._id);
+    }
+
+    await Order.findByIdAndUpdate(newOrder._id, { orderItems: orderItemIds });
+    await Cart.findOneAndDelete({ userID: userId });
+
+    return { success: true, message: "Order created successfully", order: newOrder };
+};
+
 
 const handleMoMoCallback = async (callbackData) => {
     const resultCode = callbackData.resultCode;
@@ -67,7 +122,15 @@ const accessKey = 'F8BBA842ECF85';
 const secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
 const partnerCode = 'MOMO';
 const redirectUrl = 'http://localhost:5173/orderList'; // URL nhận kết quả sau khi thanh toán
-const ipnUrl = 'https://new-be-71aa.onrender.com/api/orders/callback';
+const ipnUrl = 'https://new-be-71aa.onrender.com/api/orders/mcallback';
+
+const config = {
+    app_id: "2553",
+    key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
+    key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
+    endpoint: "https://sb-openapi.zalopay.vn/v2/create",
+    callback_url: "https://new-be-71aa.onrender.com/api/orders/zcallback"
+};
 
 const createOrder = async (data) => {
     try {
@@ -137,7 +200,83 @@ const createOrder = async (data) => {
                 }
             };
         }
+        if (data.paymentMethod.name === 'ZaloPay') {
+            const transID = Math.floor(Math.random() * 1000000);
+            const app_trans_id = `${moment().format('YYMMDD')}_${transID}`;
+            const app_time = Date.now();
 
+            const tempCartItems = cart.items.map(item => ({
+                _id: item._id,
+                product: item.product,
+                quantity: item.quantity
+            }));
+
+            const embed_data_obj = {
+                redirecturl: "http://localhost:5173/orderList",
+                userId: data.userId,
+                cartItems: tempCartItems,
+                paymentMethod: data.paymentMethod,
+                shipmentMethod: data.shipmentMethod,
+                orderUser: data.orderUser,
+                totalAmount: data.totalAmount,
+                totalPrice: data.totalPrice,
+                expectDeliveryDate: data.expectDeliveryDate,
+                tax: data.tax
+            };
+
+            const order = {
+                app_id: config.app_id,
+                app_trans_id,
+                app_user: data.userId.toString(),
+                app_time,
+                item: JSON.stringify([]), // Có thể thêm sản phẩm chi tiết nếu Zalo yêu cầu
+                embed_data: JSON.stringify(embed_data_obj),
+                amount: data.totalAmount,
+                description: `Thanh toán đơn hàng #${transID}`,
+                bank_code: "",
+                callback_url: config.callback_url
+            };
+
+            const dataString = [
+                config.app_id,
+                app_trans_id,
+                order.app_user,
+                order.amount,
+                app_time,
+                order.embed_data,
+                order.item
+            ].join("|");
+
+            order.mac = CryptoJS.HmacSHA256(dataString, config.key1).toString();
+
+            try {
+                const result = await axios.post(config.endpoint, null, { params: order });
+
+                if (result.data && result.data.order_url) {
+                    console.log("ZaloPay response:", result.data);
+                    return {
+                        EC: 0,
+                        EM: "Redirecting to ZaloPay",
+                        DT: {
+                            payUrl: result.data.order_url
+                        }
+                    };
+                } else {
+                    return {
+                        EC: 400,
+                        EM: "ZaloPay error",
+                        DT: result.data
+                    };
+                }
+            } catch (error) {
+                console.error("ZaloPay Error:", error);
+                return {
+                    EC: 500,
+                    EM: "ZaloPay API call failed",
+                    DT: error.message
+                };
+            }
+        }
         // ===========================
         // Nếu KHÔNG phải MoMo => tạo đơn luôn
         // ===========================
@@ -676,4 +815,4 @@ const getTopProduct = async ({ year, month, day }) => {
 };
 
 
-export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback };
+export { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, getTopProduct, handleMoMoCallback, handleZaloCallback };

@@ -1,4 +1,4 @@
-import { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, momoCallback } from "../controllers/orderController.js";
+import { createOrder, deleteOrder, updateOrder, getOrder, getAllOrders, momoCallback, zaloCallback } from "../controllers/orderController.js";
 import express from 'express';
 import dotenv from 'dotenv';
 
@@ -14,7 +14,8 @@ let initOrderRoute = (app) => {
 
     router.patch("/:id", updateOrder);
     router.delete("/:id", deleteOrder);
-    router.post("/callback", momoCallback);
+    router.post("/mcallback", momoCallback);
+    router.post("/zcallback", zaloCallback);
     return app.use("/api/orders/", router);
 };
 
