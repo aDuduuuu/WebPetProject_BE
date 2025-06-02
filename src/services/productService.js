@@ -4,7 +4,14 @@ import Product from "../models/product.js";
 const createProduct = async (data) => {
     try {
         console.log(data);
-        let product = await Product.create(data);
+
+        // Đảm bảo luôn set status là "active" khi tạo
+        const productData = {
+            ...data,
+            status: "active"
+        };
+
+        let product = await Product.create(productData);
         return {
             EC: 200,
             EM: "Product created successfully",
@@ -20,16 +27,25 @@ const createProduct = async (data) => {
     }
 };
 
+
 // Delete Product
 const deleteProduct = async (id, useProductCode = false) => {
     try {
         let product;
         if (useProductCode) {
-            // Delete product by productCode
-            product = await Product.findOneAndDelete({ productCode: id });
+            // Update status to inactive by productCode
+            product = await Product.findOneAndUpdate(
+                { productCode: id },
+                { status: "inactive" },
+                { new: true }
+            );
         } else {
-            // Delete product by MongoDB _id
-            product = await Product.findByIdAndDelete(id);
+            // Update status to inactive by MongoDB _id
+            product = await Product.findByIdAndUpdate(
+                id,
+                { status: "inactive" },
+                { new: true }
+            );
         }
 
         if (!product) {
@@ -42,7 +58,7 @@ const deleteProduct = async (id, useProductCode = false) => {
 
         return {
             EC: 200,
-            EM: "Product deleted successfully",
+            EM: "Product marked as inactive successfully",
             DT: product
         };
     } catch (error) {
@@ -54,6 +70,7 @@ const deleteProduct = async (id, useProductCode = false) => {
         };
     }
 };
+
 
 // Update Product
 const updateProduct = async (id, data, useProductCode = false) => {
@@ -92,13 +109,15 @@ const updateProduct = async (id, data, useProductCode = false) => {
 
 const getProduct = async (id, useProductCode = false, page = 1, limit = 20, filters = {}, sortBy = '') => {
     try {
-        let query = {};
+        let query = { status: "active" }; // ✅ Chỉ lấy sản phẩm active
 
         // Nếu có id hoặc useProductCode, lấy sản phẩm cụ thể
         if (id) {
-            const product = useProductCode
-                ? await Product.findOne({ productCode: id })
-                : await Product.findById(id);
+            const findQuery = useProductCode
+                ? { productCode: id, status: "active" }
+                : { _id: id, status: "active" };
+
+            const product = await Product.findOne(findQuery);
 
             if (!product) {
                 return { EC: 404, EM: "Product not found", DT: "" };
@@ -144,15 +163,18 @@ const getProduct = async (id, useProductCode = false, page = 1, limit = 20, filt
     }
 };
 
+
 // Search Product by name (case-insensitive, paginated)
 const searchProductByName = async (keyword, page = 1, limit = 10) => {
     try {
         const regex = new RegExp(keyword, "i"); // Case-insensitive search
         const skip = (page - 1) * limit;
 
-        const totalProducts = await Product.countDocuments({ name: regex });
+        const query = { name: regex, status: "active" }; // ✅ chỉ lấy product active
 
-        const products = await Product.find({ name: regex })
+        const totalProducts = await Product.countDocuments(query);
+
+        const products = await Product.find(query)
             .limit(limit)
             .skip(skip)
             .select("name image price productType quantity description");
@@ -173,4 +195,5 @@ const searchProductByName = async (keyword, page = 1, limit = 10) => {
     }
 };
 
-export { createProduct, deleteProduct, updateProduct, getProduct, searchProductByName};
+
+export { createProduct, deleteProduct, updateProduct, getProduct, searchProductByName };
