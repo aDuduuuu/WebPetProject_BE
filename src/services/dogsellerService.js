@@ -1,4 +1,4 @@
-import DogSeller from "../models/dogSeller.js";
+import DogSeller from "../models/dogseller.js";
 
 // Create Dog Seller
 const createDogSeller = async (data) => {
