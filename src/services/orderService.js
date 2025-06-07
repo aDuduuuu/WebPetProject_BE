@@ -420,6 +420,8 @@ const updateOrder = async (id, data) => {
 const getOrder = async (data) => {
     try {
         let order;
+
+        // Trường hợp lấy chi tiết một đơn hàng theo ID
         if (data.id) {
             order = await Order.findById(data.id);
             if (order) {
@@ -434,7 +436,7 @@ const getOrder = async (data) => {
                     EC: 0,
                     EM: "Get Order successfully",
                     DT: { ...order._doc, orderItems: orderItems }
-                }
+                };
             } else {
                 return {
                     EC: 404,
@@ -443,8 +445,13 @@ const getOrder = async (data) => {
                 };
             }
         } else {
-            let orders = await Order.find({ userID: data.userID }).skip((data.page - 1) * data.limit).limit(data.limit);
-            if (orders) {
+            // Trường hợp lấy danh sách đơn hàng của user theo userID và phân trang
+            let orders = await Order.find({ userID: data.userID })
+                .sort({ orderDate: -1 }) // 🔥 Sắp xếp theo orderDate giảm dần (mới nhất lên đầu)
+                .skip((data.page - 1) * data.limit)
+                .limit(data.limit);
+
+            if (orders && orders.length > 0) {
                 for (let i = 0; i < orders.length; i++) {
                     let orderDetail = [];
                     for (let j = 0; j < orders[i].orderItems.length; j++) {
@@ -452,11 +459,14 @@ const getOrder = async (data) => {
                         let product = await Product.findById(orderItem.product.toString());
                         orderDetail.push({ product: product, quantity: orderItem.quantity });
                     }
+
+                    // Gán thêm field orderDetail cho mỗi đơn
                     orders[i] = {
                         ...orders[i]._doc,
                         orderDetail: orderDetail
-                    }
+                    };
                 }
+
                 return {
                     EC: 0,
                     EM: "Get Order successfully",
@@ -469,7 +479,6 @@ const getOrder = async (data) => {
                     DT: ""
                 };
             }
-
         }
     } catch (error) {
         console.error("Error retrieving OrderItem:", error.message);
@@ -480,6 +489,7 @@ const getOrder = async (data) => {
         };
     }
 };
+
 
 const getAllOrders = async (data) => {
     try {
